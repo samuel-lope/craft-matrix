@@ -1,0 +1,5 @@
+{
+  "name": "Parametric Grid Generator",
+  "description": "A customizable, generic grid matrix generator where you can adjust rows, columns, cell size, grid lines, and fill cells with colors or SVG images.",
+  "requestFramePermissions": []
+}
