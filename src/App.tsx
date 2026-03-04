@@ -660,7 +660,7 @@ export default function App() {
 
           <div
             ref={gridRef}
-            className="shadow-[0_0_40px_rgba(0,0,0,0.5),0_0_10px_rgba(79,70,229,0.2)] transition-all duration-300 ring-1 ring-white/10"
+            className="shadow-2xl transition-all duration-300"
             style={{
               padding: gridState.borderThickness,
               backgroundColor: gridState.borderColor,
@@ -684,7 +684,7 @@ export default function App() {
                     <div
                       key={key}
                       onClick={() => handleCellClick(rowIndex, colIndex)}
-                      className="bg-slate-900/40 backdrop-blur-[2px] relative cursor-pointer group flex items-center justify-center transition-colors duration-200 hover:bg-slate-800/60"
+                      className="bg-white relative cursor-pointer group flex items-center justify-center transition-colors duration-200 hover:bg-neutral-50"
                       style={{
                         width: gridState.cellSize,
                         height: gridState.cellSize,
