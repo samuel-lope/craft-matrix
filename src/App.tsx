@@ -1,8 +1,10 @@
-import React, { useState, useCallback, useRef } from 'react';
-import { Settings, MousePointer2, PaintBucket, Image as ImageIcon, Eraser, Download, Square, Library } from 'lucide-react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { Settings, MousePointer2, PaintBucket, Image as ImageIcon, Eraser, Download, Square, Library, FolderOpen, Save } from 'lucide-react';
 import * as htmlToImage from 'html-to-image';
-import { CellData, GridState, Tool, CellBorder, BorderAlignment, SavedAsset } from './types';
+import { CellData, GridState, Tool, CellBorder, BorderAlignment, SavedAsset, SavedGrid } from './types';
 import AssetManager from './AssetManager';
+import GridManager from './GridManager';
+import Modal from './Modal';
 
 const getBorderOffset = (border: CellBorder | undefined, lineThickness: number) => {
   if (!border) return 0;
@@ -40,6 +42,12 @@ export default function App() {
     { id: 'i1', name: 'Red Circle', value: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="120" height="120"><circle cx="50" cy="50" r="40" fill="red" opacity="0.8" /></svg>' }
   ]);
   const [showAssetManager, setShowAssetManager] = useState(false);
+  const [showGridManager, setShowGridManager] = useState(false);
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+  const [isSavePromptModalOpen, setIsSavePromptModalOpen] = useState(false);
+  const [saveName, setSaveName] = useState('');
+  const [currentGridId, setCurrentGridId] = useState<string | null>(null);
+  const [currentGridName, setCurrentGridName] = useState<string>('');
 
   const [currentCellBorderWidth, setCurrentCellBorderWidth] = useState<number>(2);
   const [currentCellBorderColor, setCurrentCellBorderColor] = useState<string>('#000000');
@@ -56,6 +64,28 @@ export default function App() {
   };
 
   const gridRef = useRef<HTMLDivElement>(null);
+
+  // Load assets from LocalStorage on mount
+  useEffect(() => {
+    const storedColors = localStorage.getItem('savedColors');
+    const storedBgSvgs = localStorage.getItem('savedBgSvgs');
+    const storedItemSvgs = localStorage.getItem('savedItemSvgs');
+
+    if (storedColors) setSavedColors(JSON.parse(storedColors));
+    if (storedBgSvgs) setSavedBgSvgs(JSON.parse(storedBgSvgs));
+    if (storedItemSvgs) setSavedItemSvgs(JSON.parse(storedItemSvgs));
+  }, []);
+
+  // Save assets to LocalStorage on change
+  useEffect(() => {
+    localStorage.setItem('savedColors', JSON.stringify(savedColors));
+  }, [savedColors]);
+  useEffect(() => {
+    localStorage.setItem('savedBgSvgs', JSON.stringify(savedBgSvgs));
+  }, [savedBgSvgs]);
+  useEffect(() => {
+    localStorage.setItem('savedItemSvgs', JSON.stringify(savedItemSvgs));
+  }, [savedItemSvgs]);
 
   const handleDownload = useCallback(() => {
     if (gridRef.current === null) {
@@ -124,7 +154,64 @@ export default function App() {
       
       return { ...prev, cells: newCells };
     });
-  }, [activeTool, currentColor, currentBgSvg, currentItemSvg, currentCellBorderWidth, currentCellBorderColor, activeEdges]);
+  }, [activeTool, currentColor, currentBgSvg, currentItemSvg, currentCellBorderWidth, currentCellBorderColor, activeEdges, currentCellBorderAlignment]);
+
+  const handleSaveGrid = () => {
+    if (!saveName.trim()) return;
+    
+    const newSave: SavedGrid = {
+      id: Date.now().toString(),
+      name: saveName.trim(),
+      updatedAt: Date.now(),
+      gridState: gridState
+    };
+
+    const stored = localStorage.getItem('savedGrids');
+    const grids: SavedGrid[] = stored ? JSON.parse(stored) : [];
+    grids.push(newSave);
+    localStorage.setItem('savedGrids', JSON.stringify(grids));
+    
+    setCurrentGridId(newSave.id);
+    setCurrentGridName(newSave.name);
+    setIsSaveModalOpen(false);
+    setSaveName('');
+  };
+
+  const handleOverwriteGrid = () => {
+    if (!currentGridId) return;
+    const stored = localStorage.getItem('savedGrids');
+    if (!stored) return;
+    let grids: SavedGrid[] = JSON.parse(stored);
+    grids = grids.map(g => g.id === currentGridId ? {
+      ...g,
+      updatedAt: Date.now(),
+      gridState: gridState
+    } : g);
+    localStorage.setItem('savedGrids', JSON.stringify(grids));
+    setIsSavePromptModalOpen(false);
+  };
+
+  const handlePromptSaveAs = () => {
+    setIsSavePromptModalOpen(false);
+    setSaveName(currentGridName + ' (Copy)');
+    setIsSaveModalOpen(true);
+  };
+
+  const onSaveClick = () => {
+    if (currentGridId) {
+      setIsSavePromptModalOpen(true);
+    } else {
+      setSaveName('');
+      setIsSaveModalOpen(true);
+    }
+  };
+
+  const handleLoadGrid = (loadedGrid: SavedGrid) => {
+    setGridState(loadedGrid.gridState);
+    setCurrentGridId(loadedGrid.id);
+    setCurrentGridName(loadedGrid.name);
+    setShowGridManager(false);
+  };
 
   if (showAssetManager) {
     return (
@@ -140,31 +227,58 @@ export default function App() {
     );
   }
 
+  if (showGridManager) {
+    return (
+      <GridManager 
+        onClose={() => setShowGridManager(false)}
+        onLoad={handleLoadGrid}
+      />
+    );
+  }
+
   return (
     <div className="flex h-screen w-full bg-neutral-100 text-neutral-900 font-sans">
       {/* Sidebar Controls */}
       <aside className="w-80 bg-white border-r border-neutral-200 flex flex-col h-full overflow-y-auto shadow-sm z-10">
         <div className="p-4 border-b border-neutral-200">
           <div className="flex items-center justify-between mb-4">
-            <h1 className="text-lg font-semibold flex items-center gap-2">
-              <Settings className="w-5 h-5" />
-              Grid Matrix
+            <h1 className="text-lg font-semibold flex items-center gap-2 truncate" title={currentGridName || 'Grid Matrix'}>
+              <Settings className="w-5 h-5 shrink-0" />
+              <span className="truncate">{currentGridName || 'Grid Matrix'}</span>
             </h1>
+            <div className="flex items-center gap-1">
+              <button 
+                onClick={() => setShowGridManager(true)}
+                className="p-1.5 text-neutral-500 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                title="Manage Saved Grids"
+              >
+                <FolderOpen className="w-5 h-5" />
+              </button>
+              <button 
+                onClick={() => setShowAssetManager(true)}
+                className="p-1.5 text-neutral-500 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                title="Manage Assets"
+              >
+                <Library className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
             <button 
-              onClick={() => setShowAssetManager(true)}
-              className="p-1.5 text-neutral-500 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
-              title="Manage Assets"
+              onClick={onSaveClick}
+              className="w-full flex items-center justify-center gap-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 py-2 px-3 rounded-md text-sm font-medium transition-colors"
             >
-              <Library className="w-5 h-5" />
+              <Save className="w-4 h-4" />
+              Save Grid
+            </button>
+            <button 
+              onClick={handleDownload}
+              className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2 px-3 rounded-md text-sm font-medium transition-colors"
+            >
+              <Download className="w-4 h-4" />
+              Export PNG
             </button>
           </div>
-          <button 
-            onClick={handleDownload}
-            className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md text-sm font-medium transition-colors"
-          >
-            <Download className="w-4 h-4" />
-            Download PNG
-          </button>
         </div>
 
         <div className="p-4 space-y-6 flex-1">
@@ -658,6 +772,76 @@ export default function App() {
         </div>
         </div>
       </main>
+
+      {/* Save Prompt Modal (Save vs Save As) */}
+      <Modal 
+        isOpen={isSavePromptModalOpen} 
+        onClose={() => setIsSavePromptModalOpen(false)}
+        title="Save Grid"
+      >
+        <div className="space-y-4">
+          <p className="text-neutral-600 text-sm">
+            You are editing <strong className="text-neutral-900">{currentGridName}</strong>. Do you want to overwrite the existing save or create a new one?
+          </p>
+          <div className="flex flex-col gap-2 pt-2">
+            <button 
+              onClick={handleOverwriteGrid}
+              className="w-full px-4 py-2 text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition-colors"
+            >
+              Save (Overwrite)
+            </button>
+            <button 
+              onClick={handlePromptSaveAs}
+              className="w-full px-4 py-2 text-sm font-medium bg-neutral-100 text-neutral-700 hover:bg-neutral-200 rounded-lg transition-colors"
+            >
+              Save As (New Copy)
+            </button>
+            <button 
+              onClick={() => setIsSavePromptModalOpen(false)}
+              className="w-full px-4 py-2 text-sm font-medium text-neutral-500 hover:bg-neutral-50 rounded-lg transition-colors mt-2"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Save Grid Modal */}
+      <Modal 
+        isOpen={isSaveModalOpen} 
+        onClose={() => setIsSaveModalOpen(false)}
+        title={currentGridId ? "Save As" : "Save Grid"}
+      >
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-neutral-700">Grid Name</label>
+            <input 
+              type="text" 
+              autoFocus
+              value={saveName}
+              onChange={(e) => setSaveName(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSaveGrid()}
+              placeholder="e.g., My Awesome Matrix"
+              className="w-full px-3 py-2 border border-neutral-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+            />
+          </div>
+          <div className="flex justify-end gap-3 pt-2">
+            <button 
+              onClick={() => setIsSaveModalOpen(false)}
+              className="px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-100 rounded-lg transition-colors"
+            >
+              Cancel
+            </button>
+            <button 
+              onClick={handleSaveGrid}
+              disabled={!saveName.trim()}
+              className="px-4 py-2 text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
+            >
+              Save
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

@@ -34,3 +34,10 @@ export type SavedAsset = {
   name: string;
   value: string;
 };
+
+export type SavedGrid = {
+  id: string;
+  name: string;
+  updatedAt: number;
+  gridState: GridState;
+};
