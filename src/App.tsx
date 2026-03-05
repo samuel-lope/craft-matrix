@@ -22,6 +22,9 @@ export default function App() {
     lineColor: '#e5e7eb',
     borderThickness: 4,
     borderColor: '#1a1a1a',
+    externalMargin: 0,
+    externalMarginColor: '#ffffff',
+    externalMarginOpacity: 0,
     cells: {},
   });
 
@@ -101,6 +104,23 @@ export default function App() {
       })
       .catch((err) => {
         console.error('Oops, something went wrong!', err);
+      });
+  }, [gridRef]);
+
+  const handleExportSvg = useCallback(() => {
+    if (gridRef.current === null) {
+      return;
+    }
+
+    htmlToImage.toSvg(gridRef.current, { cacheBust: true })
+      .then((dataUrl) => {
+        const link = document.createElement('a');
+        link.download = 'grid-matrix.svg';
+        link.href = dataUrl;
+        link.click();
+      })
+      .catch((err) => {
+        console.error('Oops, something went wrong with SVG export!', err);
       });
   }, [gridRef]);
 
@@ -248,38 +268,6 @@ export default function App() {
               <Settings className="w-5 h-5 shrink-0 text-indigo-400" />
               <span className="truncate tracking-wide">{currentGridName || 'Grid Matrix'}</span>
             </h1>
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => setShowGridManager(true)}
-                className="p-1.5 text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-md transition-all"
-                title="Manage Saved Grids"
-              >
-                <FolderOpen className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => setShowAssetManager(true)}
-                className="p-1.5 text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-md transition-all"
-                title="Manage Assets"
-              >
-                <Library className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={onSaveClick}
-              className="w-full flex items-center justify-center gap-2 btn-secondary py-2 px-3 text-sm"
-            >
-              <Save className="w-4 h-4" />
-              Save Grid
-            </button>
-            <button
-              onClick={handleDownload}
-              className="w-full flex items-center justify-center gap-2 btn-primary py-2 px-3 text-sm"
-            >
-              <Download className="w-4 h-4" />
-              Export PNG
-            </button>
           </div>
         </div>
 
@@ -381,6 +369,56 @@ export default function App() {
                   className="w-full px-3 py-2 glass-input"
                 />
               </div>
+
+              {/* External Margin Setting */}
+              <div className="pt-3 border-t border-slate-700/50 space-y-4">
+                <h3 className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">External Margin</h3>
+                <div className="grid grid-cols-1 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Size (px)</label>
+                    <input
+                      type="number"
+                      min="0" max="500"
+                      value={gridState.externalMargin || 0}
+                      onChange={(e) => handleGridChange('externalMargin', parseInt(e.target.value) || 0)}
+                      className="w-full px-3 py-2 glass-input"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Color</label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="color"
+                          value={gridState.externalMarginColor || '#ffffff'}
+                          onChange={(e) => handleGridChange('externalMarginColor', e.target.value)}
+                          className="w-6 h-6 rounded border-0 p-0 cursor-pointer bg-transparent shrink-0"
+                        />
+                        <input
+                          type="text"
+                          value={gridState.externalMarginColor || '#ffffff'}
+                          onChange={(e) => handleGridChange('externalMarginColor', e.target.value)}
+                          className="w-full px-2 py-1 glass-input text-xs uppercase"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Opacity (0-100%)</label>
+                      <input
+                        type="number"
+                        min="0" max="100"
+                        value={Math.round((gridState.externalMarginOpacity ?? 0) * 100)}
+                        onChange={(e) => {
+                          const val = Math.max(0, Math.min(100, parseInt(e.target.value) || 0));
+                          handleGridChange('externalMarginOpacity', val / 100);
+                        }}
+                        className="w-full px-3 py-1.5 glass-input"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
             </div>
           </section>
 
@@ -648,148 +686,214 @@ export default function App() {
       </aside>
 
       {/* Main Grid Area */}
-      <main className="flex-1 overflow-auto bg-slate-950 relative">
-        <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none opacity-50"></div>
-        <div className="min-h-full min-w-full flex flex-col items-center justify-center p-8 w-max h-max relative z-10">
-
-          {/* Grid Container */}
-          <div className="mb-6 px-4 py-2 glass-panel rounded-full flex items-center gap-2 max-w-fit mx-auto border border-indigo-500/20 shadow-[0_0_15px_rgba(79,70,229,0.15)]">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span className="text-xs font-mono text-indigo-200 tracking-wider">WORKSPACE ACTIVE</span>
+      <main className="flex-1 flex flex-col overflow-hidden bg-slate-950 relative">
+        {/* Top Menu Bar */}
+        <header className="h-16 border-b border-slate-700/50 bg-slate-900/80 backdrop-blur-xl flex items-center justify-between px-6 z-20 shrink-0 shadow-lg">
+          <div className="flex items-center gap-4">
+            <div className="px-4 py-1.5 glass-panel rounded-full flex items-center gap-2 border border-indigo-500/20 shadow-[0_0_15px_rgba(79,70,229,0.15)]">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span className="text-xs font-mono text-indigo-200 tracking-wider font-bold">WORKSPACE ACTIVE</span>
+            </div>
           </div>
 
-          <div
-            ref={gridRef}
-            className="shadow-2xl transition-all duration-300"
-            style={{
-              padding: gridState.borderThickness,
-              backgroundColor: gridState.borderColor,
-            }}
-          >
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowGridManager(true)}
+              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-300 hover:text-indigo-300 hover:bg-indigo-500/10 rounded-lg transition-all border border-transparent hover:border-indigo-500/30"
+            >
+              <FolderOpen className="w-4 h-4" />
+              Manage Saved Grids
+            </button>
+            <button
+              onClick={() => setShowAssetManager(true)}
+              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-300 hover:text-indigo-300 hover:bg-indigo-500/10 rounded-lg transition-all border border-transparent hover:border-indigo-500/30"
+            >
+              <Library className="w-4 h-4" />
+              Manage Assets
+            </button>
+            <div className="w-px h-6 bg-slate-700/50 mx-2"></div>
+            <button
+              onClick={onSaveClick}
+              className="flex items-center gap-2 btn-secondary py-2 px-4 text-sm"
+            >
+              <Save className="w-4 h-4" />
+              Save Grid
+            </button>
+            <button
+              onClick={handleDownload}
+              className="flex items-center gap-2 btn-primary py-2 px-4 text-sm"
+            >
+              <Download className="w-4 h-4" />
+              PNG
+            </button>
+            <button
+              onClick={handleExportSvg}
+              className="flex items-center gap-2 btn-primary py-2 px-4 text-sm"
+            >
+              <Download className="w-4 h-4" />
+              SVG
+            </button>
+          </div>
+        </header>
+
+        <div className="flex-1 overflow-auto relative">
+          <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none opacity-50"></div>
+          <div className="min-h-full min-w-full flex flex-col items-center justify-center p-8 w-max h-max relative z-10">
+
+            {/* Grid Container */}
+            {/* This wrapper ensures the external margin is captured during export */}
             <div
-              className="grid"
+              ref={gridRef}
+              className="shadow-2xl transition-all duration-300 relative"
               style={{
-                gridTemplateColumns: `repeat(${gridState.cols}, ${gridState.cellSize}px)`,
-                gridTemplateRows: `repeat(${gridState.rows}, ${gridState.cellSize}px)`,
-                gap: gridState.lineThickness,
-                backgroundColor: gridState.lineColor,
+                padding: gridState.externalMargin || 0,
               }}
             >
-              {Array.from({ length: gridState.rows }).map((_, rowIndex) => (
-                Array.from({ length: gridState.cols }).map((_, colIndex) => {
-                  const key = `${rowIndex},${colIndex}`;
-                  const cellData = gridState.cells[key];
+              {/* The actual external margin background. Kept separate from main div to handle opacity cleanly. */}
+              {(gridState.externalMargin ?? 0) > 0 && (
+                <div
+                  className="absolute inset-0 z-0"
+                  style={{
+                    backgroundColor: gridState.externalMarginColor || '#ffffff',
+                    opacity: gridState.externalMarginOpacity ?? 0,
+                    borderRadius: '0px'
+                  }}
+                />
+              )}
 
-                  return (
-                    <div
-                      key={key}
-                      onClick={() => handleCellClick(rowIndex, colIndex)}
-                      className="bg-white relative cursor-pointer group flex items-center justify-center transition-colors duration-200 hover:bg-neutral-50"
-                      style={{
-                        width: gridState.cellSize,
-                        height: gridState.cellSize,
-                      }}
-                    >
-                      {/* Hover Overlay (Z-index 5) - Placed below items so it doesn't affect them */}
-                      <div className="absolute inset-0 z-[5] pointer-events-none bg-black opacity-0 group-hover:opacity-10 transition-opacity" />
+              <div
+                className="relative z-10"
+                style={{
+                  padding: gridState.borderThickness,
+                  backgroundColor: gridState.borderColor,
+                }}
+              >
+                <div
+                  className="grid"
+                  style={{
+                    gridTemplateColumns: `repeat(${gridState.cols}, ${gridState.cellSize}px)`,
+                    gridTemplateRows: `repeat(${gridState.rows}, ${gridState.cellSize}px)`,
+                    gap: gridState.lineThickness,
+                    backgroundColor: gridState.lineColor,
+                  }}
+                >
+                  {Array.from({ length: gridState.rows }).map((_, rowIndex) => (
+                    Array.from({ length: gridState.cols }).map((_, colIndex) => {
+                      const key = `${rowIndex},${colIndex}`;
+                      const cellData = gridState.cells[key];
 
-                      {/* Background Layer (Z-index 0) */}
-                      {cellData?.bgType === 'color' && cellData.bgValue && (
+                      return (
                         <div
-                          className="absolute inset-0 z-0"
-                          style={{ backgroundColor: cellData.bgValue }}
-                        />
-                      )}
-                      {cellData?.bgType === 'svg' && cellData.bgValue && (
-                        <div
-                          className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none overflow-hidden"
-                          dangerouslySetInnerHTML={{ __html: cellData.bgValue }}
-                        />
-                      )}
+                          key={key}
+                          onClick={() => handleCellClick(rowIndex, colIndex)}
+                          className="bg-white relative cursor-pointer group flex items-center justify-center transition-colors duration-200 hover:bg-neutral-50"
+                          style={{
+                            width: gridState.cellSize,
+                            height: gridState.cellSize,
+                          }}
+                        >
+                          {/* Hover Overlay (Z-index 5) - Placed below items so it doesn't affect them */}
+                          <div className="absolute inset-0 z-[5] pointer-events-none bg-black opacity-0 group-hover:opacity-10 transition-opacity" />
 
-                      {/* Cell Border Layer (Z-index 8) - Above background, below items */}
-                      {(cellData?.borderTop || cellData?.borderRight || cellData?.borderBottom || cellData?.borderLeft) && (
-                        (() => {
-                          const topOffset = getBorderOffset(cellData.borderTop, gridState.lineThickness);
-                          const rightOffset = getBorderOffset(cellData.borderRight, gridState.lineThickness);
-                          const bottomOffset = getBorderOffset(cellData.borderBottom, gridState.lineThickness);
-                          const leftOffset = getBorderOffset(cellData.borderLeft, gridState.lineThickness);
+                          {/* Background Layer (Z-index 0) */}
+                          {cellData?.bgType === 'color' && cellData.bgValue && (
+                            <div
+                              className="absolute inset-0 z-0"
+                              style={{ backgroundColor: cellData.bgValue }}
+                            />
+                          )}
+                          {cellData?.bgType === 'svg' && cellData.bgValue && (
+                            <div
+                              className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none overflow-hidden"
+                              dangerouslySetInnerHTML={{ __html: cellData.bgValue }}
+                            />
+                          )}
 
-                          const extTopLeft = Math.max(topOffset, leftOffset);
-                          const extTopRight = Math.max(topOffset, rightOffset);
-                          const extBottomLeft = Math.max(bottomOffset, leftOffset);
-                          const extBottomRight = Math.max(bottomOffset, rightOffset);
+                          {/* Cell Border Layer (Z-index 8) - Above background, below items */}
+                          {(cellData?.borderTop || cellData?.borderRight || cellData?.borderBottom || cellData?.borderLeft) && (
+                            (() => {
+                              const topOffset = getBorderOffset(cellData.borderTop, gridState.lineThickness);
+                              const rightOffset = getBorderOffset(cellData.borderRight, gridState.lineThickness);
+                              const bottomOffset = getBorderOffset(cellData.borderBottom, gridState.lineThickness);
+                              const leftOffset = getBorderOffset(cellData.borderLeft, gridState.lineThickness);
 
-                          return (
-                            <>
-                              {/* Top Border */}
-                              {cellData.borderTop && (
-                                <div
-                                  className="absolute z-[8] pointer-events-none"
-                                  style={{
-                                    top: -topOffset,
-                                    left: -extTopLeft,
-                                    right: -extTopRight,
-                                    height: cellData.borderTop.width,
-                                    backgroundColor: cellData.borderTop.color,
-                                  }}
-                                />
-                              )}
-                              {/* Right Border */}
-                              {cellData.borderRight && (
-                                <div
-                                  className="absolute z-[8] pointer-events-none"
-                                  style={{
-                                    top: -extTopRight,
-                                    bottom: -extBottomRight,
-                                    right: -rightOffset,
-                                    width: cellData.borderRight.width,
-                                    backgroundColor: cellData.borderRight.color,
-                                  }}
-                                />
-                              )}
-                              {/* Bottom Border */}
-                              {cellData.borderBottom && (
-                                <div
-                                  className="absolute z-[8] pointer-events-none"
-                                  style={{
-                                    left: -extBottomLeft,
-                                    right: -extBottomRight,
-                                    bottom: -bottomOffset,
-                                    height: cellData.borderBottom.width,
-                                    backgroundColor: cellData.borderBottom.color,
-                                  }}
-                                />
-                              )}
-                              {/* Left Border */}
-                              {cellData.borderLeft && (
-                                <div
-                                  className="absolute z-[8] pointer-events-none"
-                                  style={{
-                                    top: -extTopLeft,
-                                    bottom: -extBottomLeft,
-                                    left: -leftOffset,
-                                    width: cellData.borderLeft.width,
-                                    backgroundColor: cellData.borderLeft.color,
-                                  }}
-                                />
-                              )}
-                            </>
-                          );
-                        })()
-                      )}
+                              const extTopLeft = Math.max(topOffset, leftOffset);
+                              const extTopRight = Math.max(topOffset, rightOffset);
+                              const extBottomLeft = Math.max(bottomOffset, leftOffset);
+                              const extBottomRight = Math.max(bottomOffset, rightOffset);
 
-                      {/* Item Layer (Z-index 10) */}
-                      {cellData?.itemValue && (
-                        <div
-                          className="absolute z-10 flex items-center justify-center pointer-events-none"
-                          dangerouslySetInnerHTML={{ __html: cellData.itemValue }}
-                        />
-                      )}
-                    </div>
-                  );
-                })
-              ))}
+                              return (
+                                <>
+                                  {/* Top Border */}
+                                  {cellData.borderTop && (
+                                    <div
+                                      className="absolute z-[8] pointer-events-none"
+                                      style={{
+                                        top: -topOffset,
+                                        left: -extTopLeft,
+                                        right: -extTopRight,
+                                        height: cellData.borderTop.width,
+                                        backgroundColor: cellData.borderTop.color,
+                                      }}
+                                    />
+                                  )}
+                                  {/* Right Border */}
+                                  {cellData.borderRight && (
+                                    <div
+                                      className="absolute z-[8] pointer-events-none"
+                                      style={{
+                                        top: -extTopRight,
+                                        bottom: -extBottomRight,
+                                        right: -rightOffset,
+                                        width: cellData.borderRight.width,
+                                        backgroundColor: cellData.borderRight.color,
+                                      }}
+                                    />
+                                  )}
+                                  {/* Bottom Border */}
+                                  {cellData.borderBottom && (
+                                    <div
+                                      className="absolute z-[8] pointer-events-none"
+                                      style={{
+                                        left: -extBottomLeft,
+                                        right: -extBottomRight,
+                                        bottom: -bottomOffset,
+                                        height: cellData.borderBottom.width,
+                                        backgroundColor: cellData.borderBottom.color,
+                                      }}
+                                    />
+                                  )}
+                                  {/* Left Border */}
+                                  {cellData.borderLeft && (
+                                    <div
+                                      className="absolute z-[8] pointer-events-none"
+                                      style={{
+                                        top: -extTopLeft,
+                                        bottom: -extBottomLeft,
+                                        left: -leftOffset,
+                                        width: cellData.borderLeft.width,
+                                        backgroundColor: cellData.borderLeft.color,
+                                      }}
+                                    />
+                                  )}
+                                </>
+                              );
+                            })()
+                          )}
+
+                          {/* Item Layer (Z-index 10) */}
+                          {cellData?.itemValue && (
+                            <div
+                              className="absolute z-10 flex items-center justify-center pointer-events-none"
+                              dangerouslySetInnerHTML={{ __html: cellData.itemValue }}
+                            />
+                          )}
+                        </div>
+                      );
+                    })
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>

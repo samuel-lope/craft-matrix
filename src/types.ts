@@ -24,6 +24,9 @@ export type GridState = {
   lineColor: string;
   borderThickness: number;
   borderColor: string;
+  externalMargin?: number;
+  externalMarginColor?: string;
+  externalMarginOpacity?: number;
   cells: Record<string, CellData>;
 };
 
