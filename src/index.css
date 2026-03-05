@@ -36,7 +36,7 @@ body {
 }
 
 .tool-btn-active {
-    @apply bg-indigo-500/20 text-indigo-400 ring-1 ring-indigo-500 shadow-[0_0_15px_rgba(99, 102, 241, 0.3)];
+    @apply bg-indigo-500/20 text-indigo-400 ring-1 ring-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.3)];
 }
 
 .tool-btn-inactive {
