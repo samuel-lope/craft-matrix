@@ -24,7 +24,7 @@ const MemoizedCell = React.memo(({ rowIndex, colIndex, cellData, cellSize, lineT
   return (
     <div
       onClick={() => onClick(rowIndex, colIndex)}
-      className="bg-white relative cursor-pointer group flex items-center justify-center transition-colors duration-200 hover:bg-neutral-50"
+      className="relative cursor-pointer group flex items-center justify-center transition-colors duration-200"
       style={{
         width: cellSize,
         height: cellSize,
@@ -142,6 +142,8 @@ export default function App() {
     externalMargin: 0,
     externalMarginColor: '#ffffff',
     externalMarginOpacity: 0,
+    innerBgColor: '#ffffff',
+    innerBgOpacity: 1,
     cells: {},
   });
 
@@ -239,7 +241,7 @@ export default function App() {
     htmlToImage.toPng(gridRef.current, { cacheBust: true })
       .then((dataUrl) => {
         const link = document.createElement('a');
-        link.download = 'grid-matrix.png';
+        link.download = 'image_grid.png';
         link.href = dataUrl;
         link.click();
       })
@@ -256,7 +258,7 @@ export default function App() {
     htmlToImage.toSvg(gridRef.current, { cacheBust: true })
       .then((dataUrl) => {
         const link = document.createElement('a');
-        link.download = 'grid-matrix.svg';
+        link.download = 'image_grid.svg';
         link.href = dataUrl;
         link.click();
       })
@@ -519,6 +521,43 @@ export default function App() {
                   onChange={(e) => handleGridChange('borderThickness', parseInt(e.target.value) || 0)}
                   className="w-full px-3 py-2 glass-input"
                 />
+              </div>
+
+              {/* Global Inner Background Setting */}
+              <div className="pt-3 border-t border-slate-700/50 space-y-4">
+                <h3 className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">Global Inner</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Color</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={gridState.innerBgColor || '#ffffff'}
+                        onChange={(e) => handleGridChange('innerBgColor', e.target.value)}
+                        className="w-6 h-6 rounded border-0 p-0 cursor-pointer bg-transparent shrink-0"
+                      />
+                      <input
+                        type="text"
+                        value={gridState.innerBgColor || '#ffffff'}
+                        onChange={(e) => handleGridChange('innerBgColor', e.target.value)}
+                        className="w-full px-2 py-1 glass-input text-xs uppercase"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Opacity (0-100%)</label>
+                    <input
+                      type="number"
+                      min="0" max="100"
+                      value={Math.round((gridState.innerBgOpacity ?? 1) * 100)}
+                      onChange={(e) => {
+                        const val = Math.max(0, Math.min(100, parseInt(e.target.value) || 0));
+                        handleGridChange('innerBgOpacity', val / 100);
+                      }}
+                      className="w-full px-3 py-1.5 glass-input"
+                    />
+                  </div>
+                </div>
               </div>
 
               {/* External Margin Setting */}
@@ -919,15 +958,55 @@ export default function App() {
                   backgroundColor: gridState.borderColor,
                 }}
               >
-                <div
-                  className="grid"
-                  style={{
-                    gridTemplateColumns: `repeat(${gridState.cols}, ${gridState.cellSize}px)`,
-                    gridTemplateRows: `repeat(${gridState.rows}, ${gridState.cellSize}px)`,
-                    gap: gridState.lineThickness,
-                    backgroundColor: gridState.lineColor,
-                  }}
-                >
+                <div className="relative">
+                  {/* Layer Z0: Global Inner Background */}
+                  <div
+                    className="absolute inset-0 pointer-events-none z-0"
+                    style={{
+                      backgroundColor: gridState.innerBgColor || '#ffffff',
+                      opacity: gridState.innerBgOpacity ?? 1,
+                    }}
+                  />
+
+                  {/* Layer Z1: Grid Lines */}
+                  {gridState.lineThickness > 0 && (
+                    <div className="absolute inset-0 pointer-events-none z-[1] overflow-hidden">
+                      {/* Horizontal lines */}
+                      {Array.from({ length: gridState.rows - 1 }).map((_, i) => (
+                        <div
+                          key={`h-line-${i}`}
+                          className="absolute w-full"
+                          style={{
+                            height: gridState.lineThickness,
+                            backgroundColor: gridState.lineColor,
+                            top: (i + 1) * gridState.cellSize + i * gridState.lineThickness,
+                          }}
+                        />
+                      ))}
+                      {/* Vertical lines */}
+                      {Array.from({ length: gridState.cols - 1 }).map((_, i) => (
+                        <div
+                          key={`v-line-${i}`}
+                          className="absolute h-full"
+                          style={{
+                            width: gridState.lineThickness,
+                            backgroundColor: gridState.lineColor,
+                            left: (i + 1) * gridState.cellSize + i * gridState.lineThickness,
+                          }}
+                        />
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Layer Z10: React Cells Container */}
+                  <div
+                    className="grid relative z-10"
+                    style={{
+                      gridTemplateColumns: `repeat(${gridState.cols}, ${gridState.cellSize}px)`,
+                      gridTemplateRows: `repeat(${gridState.rows}, ${gridState.cellSize}px)`,
+                      gap: gridState.lineThickness,
+                    }}
+                  >
                   {Array.from({ length: gridState.rows }).map((_, rowIndex) => (
                     Array.from({ length: gridState.cols }).map((_, colIndex) => {
                       const key = `${rowIndex},${colIndex}`;
@@ -946,6 +1025,7 @@ export default function App() {
                       );
                     })
                   ))}
+                  </div>
                 </div>
               </div>
             </div>
