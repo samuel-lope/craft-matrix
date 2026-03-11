@@ -1,0 +1,42 @@
+# Craft Matrix
+
+Craft Matrix é uma aplicação web para desenhar e configurar grids personalizados, útil para criação de matrizes de jogos, mapas (battlemaps), esquemas de design ou painéis de referência visual. 
+A aplicação trabalha diretamente no navegador, construída com React, TypeScript, Tailwind CSS, Lucide React (ícones) e `html-to-image` (para exportações).
+
+## Estado Atual da Aplicação (Features Disponíveis)
+
+A partir do commit atual (`origin/main`), o projeto dispõe das seguintes funcionalidades e arquitetura:
+
+### 1. Configurações de Grid (Grid Parameters)
+O painel lateral esquerdo permite a definição contínua das propriedades estruturais do grid:
+- **Rows e Cols**: Número de linhas e colunas.
+- **Cell Size (px)**: Dimensão em pixels de cada célula individual (formato quadrado).
+- **Line Width e Line Color**: Espessura e cor das linhas divisórias da grade.
+- **Border Width e Border Color**: Espessura e cor da moldura externa do grid.
+- **External Margins**: Margens configuráveis fora da moldura do grid, aceitando definição de cor e níveis de opacidade de fundo.
+
+### 2. Ferramentas de Interação (Tools)
+As ferramentas operam sob a lógica do "clique na célula". A ferramenta selecionada dita o que ocorre ao clicar numa célula:
+- **Background Tools**: Permitem Pintar cor sólida (`bg-color`), colocar um SVG em código (`bg-svg`) de redimensionamento em 100% sob a célula, ou então apagar (`bg-eraser`) a camada plana.
+- **Item Tools**: Permitem Inserir um SVG em código (`item-svg`) que flutua acima do background ou apagar (`item-eraser`) tal item.
+- **Cell Border Tools**: Permitem aplicar (`cell-border`) ou apagar (`cell-border-eraser`) as bordas de uma célula específica. Há uma sub-janela de seleção dos lados (Top, Right, Bottom, Left), escolha de tamanho, cor e comportamento de alinhamento (`inner`, `center`, `outer`).
+- **General Tools**: Ferramenta `Pointer` (não faz nada na célula) e ferramenta para apagar todo o conteúdo de uma aba (`Eraser Area`). Há também botão para limpar a grade completa.
+
+### 3. Gerenciamento (Managers)
+- **Manage Assets**: Fica num modal dedicado (Asset Manager) para salvar strings de código hexagonal (cores), código limpo SVG para fundos, e código limpo SVG para itens.
+- **Manage Saved Grids**: Fica num modal dedicado (Grid Manager) garantindo o salvamento progressivo e versionado da grade no `LocalStorage` debaixo de uma chave de identificador da composição do estado, suportando as funções Overwrite, Save As New, e Restore.
+
+### 4. Exportação do Trabalho
+O cabecealho possui botões práticos para exportar toda a montagem visual da grade usando a lib `html-to-image`:
+- **PNG**: Realiza download de imagem transparente.
+- **SVG**: Realiza download limpo e vetorizado da grade em formato editável.
+
+## Estrutura de Aquivos Chave
+
+- `src/App.tsx`: Engloba o gerenciamento unificado de Estado, layout Tailwind-based principal da barra lateral, topo e renderização em loop de Array sobre células do Grid.
+- `src/types.ts`: Define de forma estrita todo modelo de dados tipado, notavelmente o `GridState`, `CellData` e a união `Tool`.
+- `src/AssetManager.tsx` e `src/GridManager.tsx`: Administram os overlays de gerenciamento gravando localmente na memória (LocalStorage).
+- `src/Modal.tsx`: O layout visual contentor de janelas pop-up usado nos submenus do Manager e de Salvar/Exportar.
+
+## Notas de Estilo e Diretrizes
+Este projeto usa a estética dark/glassmorphism (Variações de violeta/preto com transparências tailwind). Todo diálogo textual e interações com a inteligência artificial (inclusive este próprio documento) devem ser pautados rigorosamente na norma **Português do Brasil**. Todas as mudanças complexas requerem elaboração por painéis Modais ou desmembramentos otimizados.
