@@ -233,6 +233,23 @@ export default function App() {
     localStorage.setItem('savedItemSvgs', JSON.stringify(savedItemSvgs));
   }, [savedItemSvgs]);
 
+  const forceDownload = (dataUrl: string, filename: string) => {
+    // Convert dataUrl to a Blob to prevent browsers from ignoring the 'download' attribute on raw data URLs
+    fetch(dataUrl)
+      .then(res => res.blob())
+      .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.style.display = 'none';
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(link);
+      });
+  };
+
   const handleDownload = useCallback(() => {
     if (gridRef.current === null) {
       return;
@@ -240,10 +257,7 @@ export default function App() {
 
     htmlToImage.toPng(gridRef.current, { cacheBust: true })
       .then((dataUrl) => {
-        const link = document.createElement('a');
-        link.download = 'image_grid.png';
-        link.href = dataUrl;
-        link.click();
+        forceDownload(dataUrl, 'image_grid.png');
       })
       .catch((err) => {
         console.error('Oops, something went wrong!', err);
@@ -257,10 +271,7 @@ export default function App() {
 
     htmlToImage.toSvg(gridRef.current, { cacheBust: true })
       .then((dataUrl) => {
-        const link = document.createElement('a');
-        link.download = 'image_grid.svg';
-        link.href = dataUrl;
-        link.click();
+        forceDownload(dataUrl, 'image_grid.svg');
       })
       .catch((err) => {
         console.error('Oops, something went wrong with SVG export!', err);
