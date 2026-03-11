@@ -13,6 +13,123 @@ const getBorderOffset = (border: CellBorder | undefined, lineThickness: number) 
   return border.width + lineThickness;
 };
 
+const MemoizedCell = React.memo(({ rowIndex, colIndex, cellData, cellSize, lineThickness, onClick }: {
+  rowIndex: number;
+  colIndex: number;
+  cellData: CellData | undefined;
+  cellSize: number;
+  lineThickness: number;
+  onClick: (row: number, col: number) => void;
+}) => {
+  return (
+    <div
+      onClick={() => onClick(rowIndex, colIndex)}
+      className="bg-white relative cursor-pointer group flex items-center justify-center transition-colors duration-200 hover:bg-neutral-50"
+      style={{
+        width: cellSize,
+        height: cellSize,
+      }}
+    >
+      {/* Hover Overlay (Z-index 5) - Placed below items so it doesn't affect them */}
+      <div className="absolute inset-0 z-[5] pointer-events-none bg-black opacity-0 group-hover:opacity-10 transition-opacity" />
+
+      {/* Background Layer (Z-index 0) */}
+      {cellData?.bgType === 'color' && cellData.bgValue && (
+        <div
+          className="absolute inset-0 z-0"
+          style={{ backgroundColor: cellData.bgValue }}
+        />
+      )}
+      {cellData?.bgType === 'svg' && cellData.bgValue && (
+        <div
+          className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none overflow-hidden"
+          dangerouslySetInnerHTML={{ __html: cellData.bgValue }}
+        />
+      )}
+
+      {/* Cell Border Layer (Z-index 8) - Above background, below items */}
+      {(cellData?.borderTop || cellData?.borderRight || cellData?.borderBottom || cellData?.borderLeft) && (
+        (() => {
+          const topOffset = getBorderOffset(cellData.borderTop, lineThickness);
+          const rightOffset = getBorderOffset(cellData.borderRight, lineThickness);
+          const bottomOffset = getBorderOffset(cellData.borderBottom, lineThickness);
+          const leftOffset = getBorderOffset(cellData.borderLeft, lineThickness);
+
+          const extTopLeft = Math.max(topOffset, leftOffset);
+          const extTopRight = Math.max(topOffset, rightOffset);
+          const extBottomLeft = Math.max(bottomOffset, leftOffset);
+          const extBottomRight = Math.max(bottomOffset, rightOffset);
+
+          return (
+            <>
+              {/* Top Border */}
+              {cellData.borderTop && (
+                <div
+                  className="absolute z-[8] pointer-events-none"
+                  style={{
+                    top: -topOffset,
+                    left: -extTopLeft,
+                    right: -extTopRight,
+                    height: cellData.borderTop.width,
+                    backgroundColor: cellData.borderTop.color,
+                  }}
+                />
+              )}
+              {/* Right Border */}
+              {cellData.borderRight && (
+                <div
+                  className="absolute z-[8] pointer-events-none"
+                  style={{
+                    top: -extTopRight,
+                    bottom: -extBottomRight,
+                    right: -rightOffset,
+                    width: cellData.borderRight.width,
+                    backgroundColor: cellData.borderRight.color,
+                  }}
+                />
+              )}
+              {/* Bottom Border */}
+              {cellData.borderBottom && (
+                <div
+                  className="absolute z-[8] pointer-events-none"
+                  style={{
+                    left: -extBottomLeft,
+                    right: -extBottomRight,
+                    bottom: -bottomOffset,
+                    height: cellData.borderBottom.width,
+                    backgroundColor: cellData.borderBottom.color,
+                  }}
+                />
+              )}
+              {/* Left Border */}
+              {cellData.borderLeft && (
+                <div
+                  className="absolute z-[8] pointer-events-none"
+                  style={{
+                    top: -extTopLeft,
+                    bottom: -extBottomLeft,
+                    left: -leftOffset,
+                    width: cellData.borderLeft.width,
+                    backgroundColor: cellData.borderLeft.color,
+                  }}
+                />
+              )}
+            </>
+          );
+        })()
+      )}
+
+      {/* Item Layer (Z-index 10) */}
+      {cellData?.itemValue && (
+        <div
+          className="absolute z-10 flex items-center justify-center pointer-events-none"
+          dangerouslySetInnerHTML={{ __html: cellData.itemValue }}
+        />
+      )}
+    </div>
+  );
+});
+
 export default function App() {
   const [gridState, setGridState] = useState<GridState>({
     rows: 10,
@@ -67,6 +184,30 @@ export default function App() {
   };
 
   const gridRef = useRef<HTMLDivElement>(null);
+
+  const toolStateRef = useRef({
+    activeTool,
+    currentColor,
+    currentBgSvg,
+    currentItemSvg,
+    currentCellBorderWidth,
+    currentCellBorderColor,
+    currentCellBorderAlignment,
+    activeEdges
+  });
+
+  useEffect(() => {
+    toolStateRef.current = {
+      activeTool,
+      currentColor,
+      currentBgSvg,
+      currentItemSvg,
+      currentCellBorderWidth,
+      currentCellBorderColor,
+      currentCellBorderAlignment,
+      activeEdges
+    };
+  }, [activeTool, currentColor, currentBgSvg, currentItemSvg, currentCellBorderWidth, currentCellBorderColor, currentCellBorderAlignment, activeEdges]);
 
   // Load assets from LocalStorage on mount
   useEffect(() => {
@@ -130,6 +271,16 @@ export default function App() {
 
   const handleCellClick = useCallback((row: number, col: number) => {
     const key = `${row},${col}`;
+    const {
+      activeTool,
+      currentColor,
+      currentBgSvg,
+      currentItemSvg,
+      currentCellBorderWidth,
+      currentCellBorderColor,
+      currentCellBorderAlignment,
+      activeEdges
+    } = toolStateRef.current;
 
     setGridState((prev) => {
       const newCells = { ...prev.cells };
@@ -174,7 +325,7 @@ export default function App() {
 
       return { ...prev, cells: newCells };
     });
-  }, [activeTool, currentColor, currentBgSvg, currentItemSvg, currentCellBorderWidth, currentCellBorderColor, activeEdges, currentCellBorderAlignment]);
+  }, []);
 
   const handleSaveGrid = () => {
     if (!saveName.trim()) return;
@@ -783,112 +934,15 @@ export default function App() {
                       const cellData = gridState.cells[key];
 
                       return (
-                        <div
+                        <MemoizedCell
                           key={key}
-                          onClick={() => handleCellClick(rowIndex, colIndex)}
-                          className="bg-white relative cursor-pointer group flex items-center justify-center transition-colors duration-200 hover:bg-neutral-50"
-                          style={{
-                            width: gridState.cellSize,
-                            height: gridState.cellSize,
-                          }}
-                        >
-                          {/* Hover Overlay (Z-index 5) - Placed below items so it doesn't affect them */}
-                          <div className="absolute inset-0 z-[5] pointer-events-none bg-black opacity-0 group-hover:opacity-10 transition-opacity" />
-
-                          {/* Background Layer (Z-index 0) */}
-                          {cellData?.bgType === 'color' && cellData.bgValue && (
-                            <div
-                              className="absolute inset-0 z-0"
-                              style={{ backgroundColor: cellData.bgValue }}
-                            />
-                          )}
-                          {cellData?.bgType === 'svg' && cellData.bgValue && (
-                            <div
-                              className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none overflow-hidden"
-                              dangerouslySetInnerHTML={{ __html: cellData.bgValue }}
-                            />
-                          )}
-
-                          {/* Cell Border Layer (Z-index 8) - Above background, below items */}
-                          {(cellData?.borderTop || cellData?.borderRight || cellData?.borderBottom || cellData?.borderLeft) && (
-                            (() => {
-                              const topOffset = getBorderOffset(cellData.borderTop, gridState.lineThickness);
-                              const rightOffset = getBorderOffset(cellData.borderRight, gridState.lineThickness);
-                              const bottomOffset = getBorderOffset(cellData.borderBottom, gridState.lineThickness);
-                              const leftOffset = getBorderOffset(cellData.borderLeft, gridState.lineThickness);
-
-                              const extTopLeft = Math.max(topOffset, leftOffset);
-                              const extTopRight = Math.max(topOffset, rightOffset);
-                              const extBottomLeft = Math.max(bottomOffset, leftOffset);
-                              const extBottomRight = Math.max(bottomOffset, rightOffset);
-
-                              return (
-                                <>
-                                  {/* Top Border */}
-                                  {cellData.borderTop && (
-                                    <div
-                                      className="absolute z-[8] pointer-events-none"
-                                      style={{
-                                        top: -topOffset,
-                                        left: -extTopLeft,
-                                        right: -extTopRight,
-                                        height: cellData.borderTop.width,
-                                        backgroundColor: cellData.borderTop.color,
-                                      }}
-                                    />
-                                  )}
-                                  {/* Right Border */}
-                                  {cellData.borderRight && (
-                                    <div
-                                      className="absolute z-[8] pointer-events-none"
-                                      style={{
-                                        top: -extTopRight,
-                                        bottom: -extBottomRight,
-                                        right: -rightOffset,
-                                        width: cellData.borderRight.width,
-                                        backgroundColor: cellData.borderRight.color,
-                                      }}
-                                    />
-                                  )}
-                                  {/* Bottom Border */}
-                                  {cellData.borderBottom && (
-                                    <div
-                                      className="absolute z-[8] pointer-events-none"
-                                      style={{
-                                        left: -extBottomLeft,
-                                        right: -extBottomRight,
-                                        bottom: -bottomOffset,
-                                        height: cellData.borderBottom.width,
-                                        backgroundColor: cellData.borderBottom.color,
-                                      }}
-                                    />
-                                  )}
-                                  {/* Left Border */}
-                                  {cellData.borderLeft && (
-                                    <div
-                                      className="absolute z-[8] pointer-events-none"
-                                      style={{
-                                        top: -extTopLeft,
-                                        bottom: -extBottomLeft,
-                                        left: -leftOffset,
-                                        width: cellData.borderLeft.width,
-                                        backgroundColor: cellData.borderLeft.color,
-                                      }}
-                                    />
-                                  )}
-                                </>
-                              );
-                            })()
-                          )}
-
-                          {/* Item Layer (Z-index 10) */}
-                          {cellData?.itemValue && (
-                            <div
-                              className="absolute z-10 flex items-center justify-center pointer-events-none"
-                              dangerouslySetInnerHTML={{ __html: cellData.itemValue }}
-                            />
-                          )}
-                        </div>
+                          rowIndex={rowIndex}
+                          colIndex={colIndex}
+                          cellData={cellData}
+                          cellSize={gridState.cellSize}
+                          lineThickness={gridState.lineThickness}
+                          onClick={handleCellClick}
+                        />
                       );
                     })
                   ))}
