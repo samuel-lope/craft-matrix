@@ -243,10 +243,22 @@ export default function App() {
         link.style.display = 'none';
         link.href = url;
         link.download = filename;
+        link.rel = 'noopener';
         document.body.appendChild(link);
-        link.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(link);
+        
+        // Dispatch real mouse event for better browser compatibility
+        const clickEvent = new MouseEvent('click', {
+          view: window,
+          bubbles: true,
+          cancelable: true
+        });
+        link.dispatchEvent(clickEvent);
+        
+        // Delay cleanup so browser can process the download attribute correctly
+        setTimeout(() => {
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
+        }, 5000);
       });
   };
 

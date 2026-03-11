@@ -14,6 +14,7 @@ O painel lateral esquerdo permite a definição contínua das propriedades estru
 - **Line Width e Line Color**: Espessura e cor das linhas divisórias da grade.
 - **Border Width e Border Color**: Espessura e cor da moldura externa do grid.
 - **External Margins**: Margens configuráveis fora da moldura do grid, aceitando definição de cor e níveis de opacidade de fundo.
+- **Global Inner Background**: Definição global da cor e de opacidade do fundo das células, mantendo linhas e bordas da grid 100% sólidas e visíveis em qualquer opacidade do fundo.
 
 ### 2. Ferramentas de Interação (Tools)
 As ferramentas operam sob a lógica do "clique na célula". A ferramenta selecionada dita o que ocorre ao clicar numa célula:
@@ -27,9 +28,9 @@ As ferramentas operam sob a lógica do "clique na célula". A ferramenta selecio
 - **Manage Saved Grids**: Fica num modal dedicado (Grid Manager) garantindo o salvamento progressivo e versionado da grade no `LocalStorage` debaixo de uma chave de identificador da composição do estado, suportando as funções Overwrite, Save As New, e Restore.
 
 ### 4. Exportação do Trabalho
-O cabecealho possui botões práticos para exportar toda a montagem visual da grade usando a lib `html-to-image`:
-- **PNG**: Realiza download de imagem transparente.
-- **SVG**: Realiza download limpo e vetorizado da grade em formato editável.
+O cabecealho possui botões práticos para exportar toda a montagem visual da grade usando a lib `html-to-image`, que passa por uma conversão em Blob para burlar restrições de segurança do navegador que impedem downloads automáticos de Base64 em arquivos extensos:
+- **PNG**: Realiza download de imagem transparente rasterizada (`image_grid.png`).
+- **SVG**: Realiza download vetorizado da grade em formato editável (`image_grid.svg`).
 
 ## Estrutura de Aquivos Chave
 
