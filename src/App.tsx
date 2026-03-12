@@ -965,9 +965,9 @@ export default function App() {
               {/* The actual external margin background. Kept separate from main div to handle opacity cleanly. */}
               {(gridState.externalMargin ?? 0) > 0 && (
                 <div
-                  className="absolute inset-0 z-0"
+                  className="absolute inset-0 z-0 pointer-events-none box-border"
                   style={{
-                    backgroundColor: gridState.externalMarginColor || '#ffffff',
+                    border: `${gridState.externalMargin || 0}px solid ${gridState.externalMarginColor || '#ffffff'}`,
                     opacity: gridState.externalMarginOpacity ?? 0,
                     borderRadius: '0px'
                   }}
