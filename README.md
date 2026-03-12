@@ -13,6 +13,49 @@ A aplicação trabalha diretamente no navegador, construída com **React**, **Ty
 - **Margens Externas**: Espaçamento configurável fora do grid com suporte a cor e opacidade de fundo.
 - **Fundo Global**: Definição de cor e opacidade do fundo das células, mantendo linhas/bordas perfeitamente visíveis em qualquer nível de transparência.
 
+#### 📄 Referência de Parâmetros em JSON (Grid Elements)
+Abaixo está o mapeamento descritivo em formato JSON que detalha os atributos e elementos configuráveis detectados na aplicação:
+
+```json
+{
+  "gridParameters": {
+    "dimensions": {
+      "rows": "Número de linhas horizontais",
+      "cols": "Número de colunas verticais",
+      "cellSize": "Tamanho em pixels de cada célula individual (quadrada)"
+    },
+    "gridLines": {
+      "lineThickness": "Espessura (Line Width) das linhas divisórias internas",
+      "lineColor": "Cor (Line Color) das linhas divisórias internas"
+    },
+    "outerBorder": {
+      "borderThickness": "Espessura (Border Width) da moldura externa do grid",
+      "borderColor": "Cor (Border Color) da moldura externa do grid"
+    },
+    "externalMargin": {
+      "externalMargin": "Tamanho em pixels da margem fora da moldura do grid",
+      "externalMarginColor": "Cor de fundo da área da margem externa (External Margin Color)",
+      "externalMarginOpacity": "Nível de opacidade do fundo da margem externa"
+    },
+    "innerBackground": {
+      "innerBgColor": "Cor de fundo global aplicada dentro do grid",
+      "innerBgOpacity": "Opacidade global do fundo interno do grid"
+    }
+  },
+  "cellData": {
+    "bgType": "Tipo de fundo da célula ('color' para cor sólida, 'svg' para imagem vetorial)",
+    "bgValue": "Valor hexadecimal da cor ou string de código SVG do fundo da célula",
+    "itemValue": "Código SVG do item flutuante posicionado sobre o fundo da célula",
+    "borders": {
+      "borderTop": "Configuração da borda superior (largura, cor, alinhamento)",
+      "borderRight": "Configuração da borda direita (largura, cor, alinhamento)",
+      "borderBottom": "Configuração da borda inferior (largura, cor, alinhamento)",
+      "borderLeft": "Configuração da borda esquerda (largura, cor, alinhamento)"
+    }
+  }
+}
+```
+
 ### 🛠️ Ferramentas de Interação (Interação na Célula)
 - **Background Tools**: Pinte com cor sólida (`bg-color`), insira um código SVG ajustado em 100% sob a célula (`bg-svg`) ou apague a camada de fundo (`bg-eraser`).
 - **Item Tools**: Permite inserir um código SVG flutuando acima do background (`item-svg`) ou apagá-lo da célula (`item-eraser`).

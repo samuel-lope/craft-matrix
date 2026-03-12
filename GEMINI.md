@@ -16,6 +16,49 @@ O painel lateral esquerdo permite a definição contínua das propriedades estru
 - **External Margins**: Margens configuráveis fora da moldura do grid, aceitando definição de cor e níveis de opacidade de fundo.
 - **Global Inner Background**: Definição global da cor e de opacidade do fundo das células, mantendo linhas e bordas da grid 100% sólidas e visíveis em qualquer opacidade do fundo.
 
+#### Referência de Parâmetros em JSON (Grid Elements)
+Abaixo está o detalhamento estruturado em JSON de todos os elementos e parâmetros que formam o Grid State e as Células:
+
+```json
+{
+  "gridParameters": {
+    "dimensions": {
+      "rows": "Número de linhas horizontais",
+      "cols": "Número de colunas verticais",
+      "cellSize": "Tamanho em pixels de cada célula individual (quadrada)"
+    },
+    "gridLines": {
+      "lineThickness": "Espessura (Line Width) das linhas divisórias internas",
+      "lineColor": "Cor (Line Color) das linhas divisórias internas"
+    },
+    "outerBorder": {
+      "borderThickness": "Espessura (Border Width) da moldura externa do grid",
+      "borderColor": "Cor (Border Color) da moldura externa do grid"
+    },
+    "externalMargin": {
+      "externalMargin": "Tamanho em pixels da margem fora da moldura do grid",
+      "externalMarginColor": "Cor de fundo da área da margem externa (External Margin Color)",
+      "externalMarginOpacity": "Nível de opacidade do fundo da margem externa"
+    },
+    "innerBackground": {
+      "innerBgColor": "Cor de fundo global aplicada dentro do grid",
+      "innerBgOpacity": "Opacidade global do fundo interno do grid"
+    }
+  },
+  "cellData": {
+    "bgType": "Tipo de fundo da célula ('color' para cor sólida, 'svg' para imagem vetorial)",
+    "bgValue": "Valor em Hex (cor) ou string de código SVG do fundo da célula",
+    "itemValue": "Código SVG do item flutuante posicionado sobre o fundo da célula",
+    "borders": {
+      "borderTop": "Configuração da borda superior (largura, cor, alinhamento)",
+      "borderRight": "Configuração da borda direita (largura, cor, alinhamento)",
+      "borderBottom": "Configuração da borda inferior (largura, cor, alinhamento)",
+      "borderLeft": "Configuração da borda esquerda (largura, cor, alinhamento)"
+    }
+  }
+}
+```
+
 ### 2. Ferramentas de Interação (Tools)
 As ferramentas operam sob a lógica do "clique na célula". A ferramenta selecionada dita o que ocorre ao clicar numa célula:
 - **Background Tools**: Permitem Pintar cor sólida (`bg-color`), colocar um SVG em código (`bg-svg`) de redimensionamento em 100% sob a célula, ou então apagar (`bg-eraser`) a camada plana.
