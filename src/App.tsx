@@ -13,6 +13,12 @@ const getBorderOffset = (border: CellBorder | undefined, lineThickness: number) 
   return border.width + lineThickness;
 };
 
+const DEFAULT_WORKSPACE_TEXTURE = `<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'>
+  <rect width='40' height='40' fill='transparent'/>
+  <rect width='20' height='20' fill='rgba(255,255,255,0.05)'/>
+  <rect x='20' y='20' width='20' height='20' fill='rgba(255,255,255,0.05)'/>
+</svg>`;
+
 // --- Reusable UI Components ---
 
 const ToolSection = ({ title, children }: { title: string, children: React.ReactNode }) => (
@@ -197,6 +203,8 @@ export default function App() {
     externalMarginOpacity: 0,
     innerBgColor: '#ffffff',
     innerBgOpacity: 1,
+    workspaceBgColor: '#0f172a',
+    workspaceBgImageUrl: DEFAULT_WORKSPACE_TEXTURE,
     cells: {},
   });
 
@@ -361,6 +369,21 @@ export default function App() {
 
   const handleGridChange = (key: keyof GridState, value: any) => {
     setGridState((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const getWorkspaceBgStyle = () => {
+    let bgImage = 'none';
+    if (gridState.workspaceBgImageUrl) {
+      if (gridState.workspaceBgImageUrl.trim().startsWith('<svg')) {
+        bgImage = `url("data:image/svg+xml;utf8,${encodeURIComponent(gridState.workspaceBgImageUrl)}")`;
+      } else {
+        bgImage = `url("${gridState.workspaceBgImageUrl}")`;
+      }
+    }
+    return {
+      backgroundColor: gridState.workspaceBgColor || '#0f172a',
+      backgroundImage: bgImage,
+    };
   };
 
   const handleCellClick = useCallback((row: number, col: number) => {
@@ -715,6 +738,49 @@ export default function App() {
                         className="w-full px-3 py-1.5 glass-input"
                       />
                     </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Workspace Background Setting */}
+              <div className="pt-3 border-t border-slate-700/50 space-y-4">
+                <h3 className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">Workspace Background</h3>
+                <div className="grid grid-cols-1 gap-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Color</label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="color"
+                          value={gridState.workspaceBgColor || '#0f172a'}
+                          onChange={(e) => handleGridChange('workspaceBgColor', e.target.value)}
+                          className="w-6 h-6 rounded border-0 p-0 cursor-pointer bg-transparent shrink-0"
+                        />
+                        <input
+                          type="text"
+                          value={gridState.workspaceBgColor || '#0f172a'}
+                          onChange={(e) => handleGridChange('workspaceBgColor', e.target.value)}
+                          className="w-full px-2 py-1 glass-input text-xs uppercase"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5 flex flex-col justify-end">
+                       <button
+                         onClick={() => handleGridChange('workspaceBgImageUrl', '')}
+                         className="btn-danger w-full py-1 text-[10px]"
+                       >
+                         Clear Texture
+                       </button>
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Texture (URL or SVG code)</label>
+                    <textarea
+                      value={gridState.workspaceBgImageUrl || ''}
+                      onChange={(e) => handleGridChange('workspaceBgImageUrl', e.target.value)}
+                      placeholder="Paste image URL or <svg> code"
+                      className="w-full px-3 py-2 glass-input h-16 resize-none font-mono text-[10px]"
+                    />
                   </div>
                 </div>
               </div>
@@ -1079,7 +1145,7 @@ export default function App() {
           </div>
         </header>
 
-        <div className="flex-1 overflow-auto relative">
+        <div className="flex-1 overflow-auto relative" style={getWorkspaceBgStyle()}>
           <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none opacity-50"></div>
           <div className="min-h-full min-w-full flex flex-col items-center justify-center p-8 w-max h-max relative z-10">
 

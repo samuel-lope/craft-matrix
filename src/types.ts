@@ -38,6 +38,8 @@ export type GridState = {
   externalMarginOpacity?: number;
   innerBgColor?: string;
   innerBgOpacity?: number;
+  workspaceBgColor: string;
+  workspaceBgImageUrl: string;
   cells: Record<string, CellData>;
 };
 
