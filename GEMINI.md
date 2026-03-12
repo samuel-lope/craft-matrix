@@ -32,13 +32,13 @@ Abaixo está o detalhamento estruturado em JSON de todos os elementos e parâmet
       "lineColor": "Cor (Line Color) das linhas divisórias internas"
     },
     "outerBorder": {
-      "borderThickness": "Espessura (Border Width) da moldura externa do grid",
-      "borderColor": "Cor (Border Color) da moldura externa do grid"
+      "borderThickness": "Espessura da linha de contorno da moldura externa do grid (sem preenchimento central)",
+      "borderColor": "Cor da linha de contorno da moldura externa do grid"
     },
     "externalMargin": {
-      "externalMargin": "Tamanho em pixels da margem fora da moldura do grid",
-      "externalMarginColor": "Cor de fundo da área da margem externa (External Margin Color)",
-      "externalMarginOpacity": "Nível de opacidade do fundo da margem externa"
+      "externalMargin": "Espessura em pixels da margem externa (atua como uma linha de limite externa vazada)",
+      "externalMarginColor": "Cor da linha que demarca a área da margem externa",
+      "externalMarginOpacity": "Nível de opacidade da linha da margem externa"
     },
     "innerBackground": {
       "innerBgColor": "Cor de fundo global aplicada dentro do grid",
