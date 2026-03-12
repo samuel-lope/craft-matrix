@@ -163,7 +163,11 @@ const MemoizedCell = React.memo(({ rowIndex, colIndex, cellData, cellSize, lineT
       {/* Label Layer (Z-index 20) - Topmost layer */}
       {cellData?.label && (
         <div
-          className="absolute z-[20] flex items-center justify-center pointer-events-none w-full h-full"
+          className={`absolute z-[20] flex items-center pointer-events-none w-full h-full ${
+            cellData.label.align === 'start' ? 'justify-start' : 
+            cellData.label.align === 'end' ? 'justify-end' : 
+            'justify-center'
+          }`}
           style={{
             fontFamily: cellData.label.font,
             fontSize: `${cellData.label.size}px`,
@@ -205,6 +209,7 @@ export default function App() {
   const [currentLabelFont, setCurrentLabelFont] = useState<string>('Inter, sans-serif');
   const [currentLabelSize, setCurrentLabelSize] = useState<number>(24);
   const [currentLabelColor, setCurrentLabelColor] = useState<string>('#ffffff');
+  const [currentLabelAlign, setCurrentLabelAlign] = useState<'start' | 'center' | 'end'>('center');
 
   const [savedColors, setSavedColors] = useState<SavedAsset[]>([
     { id: 'c1', name: 'Blue Semi-transparent', value: 'rgba(59, 130, 246, 0.5)' },
@@ -250,6 +255,7 @@ export default function App() {
     currentLabelFont,
     currentLabelSize,
     currentLabelColor,
+    currentLabelAlign,
     currentCellBorderWidth,
     currentCellBorderColor,
     currentCellBorderAlignment,
@@ -266,12 +272,13 @@ export default function App() {
       currentLabelFont,
       currentLabelSize,
       currentLabelColor,
+      currentLabelAlign,
       currentCellBorderWidth,
       currentCellBorderColor,
       currentCellBorderAlignment,
       activeEdges
     };
-  }, [activeTool, currentColor, currentBgSvg, currentItemSvg, currentLabelText, currentLabelFont, currentLabelSize, currentLabelColor, currentCellBorderWidth, currentCellBorderColor, currentCellBorderAlignment, activeEdges]);
+  }, [activeTool, currentColor, currentBgSvg, currentItemSvg, currentLabelText, currentLabelFont, currentLabelSize, currentLabelColor, currentLabelAlign, currentCellBorderWidth, currentCellBorderColor, currentCellBorderAlignment, activeEdges]);
 
   // Load assets from LocalStorage on mount
   useEffect(() => {
@@ -367,6 +374,7 @@ export default function App() {
       currentLabelFont,
       currentLabelSize,
       currentLabelColor,
+      currentLabelAlign,
       currentCellBorderWidth,
       currentCellBorderColor,
       currentCellBorderAlignment,
@@ -394,7 +402,8 @@ export default function App() {
             text: currentLabelText,
             font: currentLabelFont,
             size: currentLabelSize,
-            color: currentLabelColor
+            color: currentLabelColor,
+            align: currentLabelAlign
           } 
         };
       } else if (activeTool === 'label-eraser') {
@@ -836,6 +845,30 @@ export default function App() {
                       onChange={(e) => setCurrentLabelSize(parseInt(e.target.value) || 12)}
                       className="w-full px-3 py-2 glass-input"
                     />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5 mt-2">
+                  <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Alignment</label>
+                  <div className="flex bg-slate-900/50 p-1 rounded-lg border border-slate-700/50">
+                    <button
+                      onClick={() => setCurrentLabelAlign('start')}
+                      className={`flex-1 py-1.5 text-[11px] font-semibold rounded-md transition-all ${currentLabelAlign === 'start' ? 'bg-indigo-500/20 text-indigo-400 shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
+                    >
+                      Start
+                    </button>
+                    <button
+                      onClick={() => setCurrentLabelAlign('center')}
+                      className={`flex-1 py-1.5 text-[11px] font-semibold rounded-md transition-all ${currentLabelAlign === 'center' ? 'bg-indigo-500/20 text-indigo-400 shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
+                    >
+                      Center
+                    </button>
+                    <button
+                      onClick={() => setCurrentLabelAlign('end')}
+                      className={`flex-1 py-1.5 text-[11px] font-semibold rounded-md transition-all ${currentLabelAlign === 'end' ? 'bg-indigo-500/20 text-indigo-400 shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
+                    >
+                      End
+                    </button>
                   </div>
                 </div>
 

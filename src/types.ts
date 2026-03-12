@@ -11,6 +11,7 @@ export type LabelData = {
   font: string;
   size: number;
   color: string;
+  align?: 'start' | 'center' | 'end';
 };
 
 export type CellData = {
