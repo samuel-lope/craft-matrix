@@ -41,3 +41,21 @@ body {
 .tool-btn-inactive {
     @apply bg-neutral-900 text-neutral-500 hover:bg-neutral-800 hover:text-neutral-300 border border-transparent hover:border-neutral-700 rounded-sm transition-colors;
 }
+
+@layer utilities {
+  .seamless-color {
+    -webkit-appearance: none;
+    appearance: none;
+    border: none;
+    padding: 0;
+  }
+  .seamless-color::-webkit-color-swatch-wrapper {
+    padding: 0;
+  }
+  .seamless-color::-webkit-color-swatch {
+    border: none;
+  }
+  .seamless-color::-moz-color-swatch {
+    border: none;
+  }
+}
