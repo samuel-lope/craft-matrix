@@ -13,6 +13,39 @@ const getBorderOffset = (border: CellBorder | undefined, lineThickness: number) 
   return border.width + lineThickness;
 };
 
+// --- Reusable UI Components ---
+
+const ToolSection = ({ title, children }: { title: string, children: React.ReactNode }) => (
+  <section className="space-y-4">
+    <h2 className="text-[11px] font-bold text-indigo-400/80 uppercase tracking-widest flex items-center gap-2">
+      <span className="w-1.5 h-1.5 rounded-full bg-indigo-500"></span> {title}
+    </h2>
+    {children}
+  </section>
+);
+
+const ToolButton = ({ 
+  icon: Icon, 
+  title, 
+  isActive, 
+  onClick 
+}: { 
+  icon: React.ElementType, 
+  title: string, 
+  isActive: boolean, 
+  onClick: () => void 
+}) => (
+  <button
+    onClick={onClick}
+    className={`p-2 rounded-lg flex justify-center items-center transition-all ${isActive ? 'tool-btn-active' : 'tool-btn-inactive'}`}
+    title={title}
+  >
+    <Icon className="w-5 h-5" />
+  </button>
+);
+
+// ------------------------------
+
 const MemoizedCell = React.memo(({ rowIndex, colIndex, cellData, cellSize, lineThickness, onClick }: {
   rowIndex: number;
   colIndex: number;
@@ -681,32 +714,11 @@ export default function App() {
           </section>
 
           {/* Background Tools */}
-          <section className="space-y-4">
-            <h2 className="text-[11px] font-bold text-indigo-400/80 uppercase tracking-widest flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500"></span> Background Tools
-            </h2>
+          <ToolSection title="Background Tools">
             <div className="grid grid-cols-3 gap-2">
-              <button
-                onClick={() => setActiveTool('bg-color')}
-                className={`p-2 rounded-lg flex justify-center items-center transition-all ${activeTool === 'bg-color' ? 'tool-btn-active' : 'tool-btn-inactive'}`}
-                title="Fill Background Color"
-              >
-                <PaintBucket className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => setActiveTool('bg-svg')}
-                className={`p-2 rounded-lg flex justify-center items-center transition-all ${activeTool === 'bg-svg' ? 'tool-btn-active' : 'tool-btn-inactive'}`}
-                title="Fill Background SVG"
-              >
-                <ImageIcon className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => setActiveTool('bg-eraser')}
-                className={`p-2 rounded-lg flex justify-center items-center transition-all ${activeTool === 'bg-eraser' ? 'tool-btn-active' : 'tool-btn-inactive'}`}
-                title="Erase Background"
-              >
-                <Eraser className="w-5 h-5" />
-              </button>
+              <ToolButton icon={PaintBucket} title="Fill Background Color" isActive={activeTool === 'bg-color'} onClick={() => setActiveTool('bg-color')} />
+              <ToolButton icon={ImageIcon} title="Fill Background SVG" isActive={activeTool === 'bg-svg'} onClick={() => setActiveTool('bg-svg')} />
+              <ToolButton icon={Eraser} title="Erase Background" isActive={activeTool === 'bg-eraser'} onClick={() => setActiveTool('bg-eraser')} />
             </div>
 
             {activeTool === 'bg-color' && (
@@ -748,28 +760,13 @@ export default function App() {
                 </div>
               </div>
             )}
-          </section>
+          </ToolSection>
 
           {/* Item Tools */}
-          <section className="space-y-4">
-            <h2 className="text-[11px] font-bold text-indigo-400/80 uppercase tracking-widest flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500"></span> Item Tools
-            </h2>
+          <ToolSection title="Item Tools">
             <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={() => setActiveTool('item-svg')}
-                className={`p-2 rounded-lg flex justify-center items-center transition-all ${activeTool === 'item-svg' ? 'tool-btn-active' : 'tool-btn-inactive'}`}
-                title="Place Item SVG"
-              >
-                <ImageIcon className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => setActiveTool('item-eraser')}
-                className={`p-2 rounded-lg flex justify-center items-center transition-all ${activeTool === 'item-eraser' ? 'tool-btn-active' : 'tool-btn-inactive'}`}
-                title="Erase Item"
-              >
-                <Eraser className="w-5 h-5" />
-              </button>
+              <ToolButton icon={ImageIcon} title="Place Item SVG" isActive={activeTool === 'item-svg'} onClick={() => setActiveTool('item-svg')} />
+              <ToolButton icon={Eraser} title="Erase Item" isActive={activeTool === 'item-eraser'} onClick={() => setActiveTool('item-eraser')} />
             </div>
 
             {activeTool === 'item-svg' && (
@@ -791,28 +788,13 @@ export default function App() {
                 </div>
               </div>
             )}
-          </section>
+          </ToolSection>
 
           {/* Label Tools */}
-          <section className="space-y-4">
-            <h2 className="text-[11px] font-bold text-indigo-400/80 uppercase tracking-widest flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500"></span> Label Tools
-            </h2>
+          <ToolSection title="Label Tools">
             <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={() => setActiveTool('label')}
-                className={`p-2 rounded-lg flex justify-center items-center transition-all ${activeTool === 'label' ? 'tool-btn-active' : 'tool-btn-inactive'}`}
-                title="Place Text Label"
-              >
-                <Type className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => setActiveTool('label-eraser')}
-                className={`p-2 rounded-lg flex justify-center items-center transition-all ${activeTool === 'label-eraser' ? 'tool-btn-active' : 'tool-btn-inactive'}`}
-                title="Erase Text Label"
-              >
-                <Eraser className="w-5 h-5" />
-              </button>
+              <ToolButton icon={Type} title="Place Text Label" isActive={activeTool === 'label'} onClick={() => setActiveTool('label')} />
+              <ToolButton icon={Eraser} title="Erase Text Label" isActive={activeTool === 'label-eraser'} onClick={() => setActiveTool('label-eraser')} />
             </div>
 
             {activeTool === 'label' && (
@@ -876,28 +858,13 @@ export default function App() {
                 </div>
               </div>
             )}
-          </section>
+          </ToolSection>
 
           {/* Cell Border Tools */}
-          <section className="space-y-4">
-            <h2 className="text-[11px] font-bold text-indigo-400/80 uppercase tracking-widest flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500"></span> Cell Border Tools
-            </h2>
+          <ToolSection title="Cell Border Tools">
             <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={() => setActiveTool('cell-border')}
-                className={`p-2 rounded-lg flex justify-center items-center transition-all ${activeTool === 'cell-border' ? 'tool-btn-active' : 'tool-btn-inactive'}`}
-                title="Apply Cell Border"
-              >
-                <Square className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => setActiveTool('cell-border-eraser')}
-                className={`p-2 rounded-lg flex justify-center items-center transition-all ${activeTool === 'cell-border-eraser' ? 'tool-btn-active' : 'tool-btn-inactive'}`}
-                title="Erase Cell Border"
-              >
-                <Eraser className="w-5 h-5" />
-              </button>
+              <ToolButton icon={Square} title="Apply Cell Borders" isActive={activeTool === 'cell-border'} onClick={() => setActiveTool('cell-border')} />
+              <ToolButton icon={Eraser} title="Erase Cell Borders" isActive={activeTool === 'cell-border-eraser'} onClick={() => setActiveTool('cell-border-eraser')} />
             </div>
 
             {(activeTool === 'cell-border' || activeTool === 'cell-border-eraser') && (
@@ -991,7 +958,7 @@ export default function App() {
                 )}
               </div>
             )}
-          </section>
+          </ToolSection>
 
           {/* General Tools */}
           <section className="space-y-4 pt-2 border-t border-slate-700/50 mt-4">
