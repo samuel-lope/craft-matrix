@@ -1,44 +1,43 @@
 @import "tailwindcss";
 
 @theme {
-    --color-cyber-dark: #0f172a;
-    --color-cyber-darker: #020617;
+    --color-cyber-dark: #000000;
+    --color-cyber-darker: #000000;
 }
 
 body {
-    @apply bg-slate-950 text-slate-200;
-    background-image: radial-gradient(circle at center, rgba(30, 41, 59, 1) 0, rgba(2, 6, 23, 1) 100%);
+    @apply bg-black text-neutral-300;
 }
 
-/* Glassmorphism Classes */
+/* Technical Minimalism Classes */
 .glass-panel {
-    @apply bg-slate-900/70 backdrop-blur-xl border border-slate-700/50 shadow-2xl;
+    @apply bg-neutral-900 border-r border-neutral-800;
 }
 
 .glass-card {
-    @apply bg-slate-800/50 backdrop-blur-md border border-slate-700/50 rounded-xl transition-all duration-300;
+    @apply bg-black border border-neutral-800 rounded-sm;
 }
 
 .glass-input {
-    @apply bg-slate-950/80 border border-slate-700/50 rounded-lg text-sm text-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all;
+    @apply bg-neutral-900 border border-neutral-800 rounded-sm text-xs text-neutral-300 focus:border-white focus:bg-black outline-none transition-colors;
 }
 
 .btn-primary {
-    @apply bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-medium rounded-lg shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 transition-all hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:shadow-none;
+    @apply bg-white hover:bg-neutral-200 text-black font-bold uppercase tracking-widest text-[10px] rounded-sm transition-colors active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed;
 }
 
 .btn-secondary {
-    @apply bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium rounded-lg border border-slate-600/50 transition-all hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0;
+    @apply bg-neutral-900 hover:bg-neutral-800 text-neutral-300 font-bold uppercase tracking-widest text-[10px] rounded-sm border border-neutral-800 transition-colors active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed;
 }
 
 .btn-danger {
-    @apply bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 font-medium rounded-lg border border-rose-500/20 transition-all hover:-translate-y-0.5 active:translate-y-0;
+    @apply bg-neutral-900 text-rose-500 hover:bg-rose-950/30 font-bold uppercase text-[10px] tracking-widest rounded-sm border border-rose-900/50 transition-colors active:scale-[0.98];
 }
 
 .tool-btn-active {
-    @apply bg-indigo-500/20 text-indigo-400 ring-1 ring-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.3)];
+    @apply bg-white text-black border border-white font-bold rounded-sm;
 }
 
 .tool-btn-inactive {
-    @apply bg-slate-800/80 text-slate-400 hover:bg-slate-700 hover:text-slate-200 border border-slate-700/50 hover:border-slate-600;
+    @apply bg-neutral-900 text-neutral-500 hover:bg-neutral-800 hover:text-neutral-300 border border-transparent hover:border-neutral-700 rounded-sm transition-colors;
 }

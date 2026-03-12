@@ -92,3 +92,51 @@ O cabecealho possui botões práticos para exportar toda a montagem visual da gr
 
 ## Notas de Estilo e Diretrizes
 Este projeto usa a estética dark/glassmorphism (Variações de violeta/preto com transparências tailwind). Todo diálogo textual e interações com a inteligência artificial (inclusive este próprio documento) devem ser pautados rigorosamente na norma **Português do Brasil**. Todas as mudanças complexas requerem elaboração por painéis Modais ou desmembramentos otimizados.
+
+## Design System & UI Component Mapping (Esquema Visual)
+
+Abaixo está o mapeamento analítico (JSON Schema) que padroniza todos os elementos visuais, paletas de cores, estilizações CSS personalizadas e diretrizes de layout (Tailwind CSS) em uso global na interface do projeto:
+
+```json
+{
+  "uiDesignSystem": {
+    "themeOptions": {
+      "mode": "Technical Minimalism",
+      "primaryColors": {
+        "black": "Black (#000000) - Fundo principal da aplicação e workspaces",
+        "neutral": "Neutral (950, 900, 800, 600, 500, 400, 300, 200, 100) - Escala de cinza base estrutural flexível; Usado em painéis, bordas, textos e inputs, eliminando o azul/roxo lavado anterior",
+        "white": "White (#FFFFFF) - Usado para contraste máximo, elementos ativos, painéis em foco e textos primários",
+        "rose": "Rose (500, 950) - Indicadores de perigo, botões destrutivos (Clear Grid, Eraser Area, Clear Texture)",
+        "emerald": "Emerald (500) - Indicador visual positivo (ex: Botão ativador Workspace Active)"
+      },
+      "typography": {
+        "base": "font-sans (Padrão Tailwind para textos contínuos e corpo de página)",
+        "headers": "font-bold text-neutral-300 uppercase tracking-widest text-[10px] ou text-xs (Títulos de seções de ferramentas e utilitários)",
+        "labels": "text-[10px] font-bold text-neutral-400 uppercase tracking-widest (Legendas de inputs de formulários e settings)",
+        "mono": "font-mono (Tags e blocos de código RAW como importações textuais SVG)"
+      }
+    },
+    "components": {
+      "containers": {
+        "panel": "bg-black border-r/l/t/b border-neutral-800",
+        "card": "bg-neutral-950 border border-neutral-800 transition-colors hover:border-neutral-500 (Agrupa blocos isolados nas seções de ferramentas, substituindo antigas sombras)"
+      },
+      "inputs": {
+        "input": "bg-black border border-neutral-800 text-[10px] font-bold uppercase tracking-widest text-neutral-200 focus:ring-1 focus:ring-white focus:border-white transition-all (Campos de formulários sutis que ganham foco na interação)"
+      },
+      "buttons": {
+        "btn-primary": "bg-white hover:bg-neutral-200 text-black text-[10px] uppercase tracking-widest font-bold transition-colors (Ações de alta prioridade: Export SVG/PNG, Save, Load)",
+        "btn-secondary": "bg-neutral-900 border border-neutral-800 text-neutral-300 hover:text-white transition-colors text-[10px] font-bold uppercase tracking-widest (Ações corriqueiras secundárias e Modais)",
+        "btn-danger": "bg-neutral-900 text-rose-500 hover:bg-rose-950 border border-rose-900/50 transition-colors text-[10px] font-bold uppercase tracking-widest",
+        "tool-btn-active": "bg-white text-black font-bold ring-1 ring-white (Indicador sharp que a ferramenta corrente foi selecionada, alto contraste)",
+        "tool-btn-inactive": "bg-neutral-950 hover:bg-neutral-900 text-neutral-500 hover:text-neutral-300 border border-neutral-800 transition-colors (Ferramenta não selecionada)"
+      },
+      "layout": {
+        "sidebar": "w-80 flex-col overflow-y-auto z-10 bg-black border-r border-neutral-800 (Painel fixo do lado esquerdo com linhas precisas)",
+        "header": "h-16 border-b border-neutral-800 bg-black z-20 (Barra superior para status do repositório/workspace/exporter)",
+        "workspace": "flex-1 overflow-auto bg-black relative (Sustenta a renderização HTML do loop de células grid e opções de textura pura SVG)"
+      }
+    }
+  }
+}
+```

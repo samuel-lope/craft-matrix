@@ -22,12 +22,12 @@ const DEFAULT_WORKSPACE_TEXTURE = `<svg xmlns='http://www.w3.org/2000/svg' width
 // --- Reusable UI Components ---
 
 const ToolSection = ({ title, children }: { title: string, children: React.ReactNode }) => (
-  <section className="space-y-4">
-    <h2 className="text-[11px] font-bold text-indigo-400/80 uppercase tracking-widest flex items-center gap-2">
-      <span className="w-1.5 h-1.5 rounded-full bg-indigo-500"></span> {title}
-    </h2>
-    {children}
-  </section>
+  <div className="space-y-3">
+    <h2 className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest px-1">{title}</h2>
+    <div className="glass-card p-3 space-y-4">
+      {children}
+    </div>
+  </div>
 );
 
 const ToolButton = ({ 
@@ -543,228 +543,218 @@ export default function App() {
   }
 
   return (
-    <div className="flex h-screen w-full bg-slate-950 text-slate-200 font-sans overflow-hidden">
+    <div className="flex h-screen w-full bg-neutral-950 text-neutral-200 font-sans overflow-hidden">
       {/* Sidebar Controls */}
-      <aside className="w-80 glass-panel flex flex-col h-full overflow-y-auto z-10 relative">
-        {/* Glow effect for sidebar */}
-        <div className="absolute top-0 left-0 w-full h-32 bg-indigo-500/10 blur-3xl pointer-events-none"></div>
-        <div className="p-5 border-b border-slate-700/50 relative z-10">
+      <aside className="w-80 flex-col overflow-y-auto glass-panel z-10 custom-scrollbar">
+        <div className="p-6 space-y-8 pb-24">
           <div className="flex items-center justify-between mb-5">
-            <h1 className="text-lg font-bold flex items-center gap-2 truncate bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400" title={currentGridName || 'Grid Matrix'}>
-              <Settings className="w-5 h-5 shrink-0 text-indigo-400" />
-              <span className="truncate tracking-wide">{currentGridName || 'Grid Matrix'}</span>
+            <h1 className="text-xl font-bold bg-gradient-to-r from-neutral-100 to-neutral-400 bg-clip-text text-transparent italic tracking-tight" title={currentGridName || 'Grid Matrix'}>
+              <span className="truncate text-neutral-400">{currentGridName || 'Grid Matrix'}</span>
             </h1>
           </div>
-        </div>
 
-        <div className="p-5 space-y-8 flex-1 relative z-10">
           {/* Grid Parameters - Optimized */}
-          <section className="space-y-4">
-            <h2 className="text-[11px] font-bold text-indigo-400/80 uppercase tracking-widest flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500"></span> Grid Parameters
-            </h2>
-
-            <div className="glass-card p-4 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Rows</label>
-                  <input
-                    type="number"
-                    min="1" max="100"
-                    value={gridState.rows}
-                    onChange={(e) => handleGridChange('rows', parseInt(e.target.value) || 1)}
-                    className="w-full px-3 py-2 glass-input"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Cols</label>
-                  <input
-                    type="number"
-                    min="1" max="100"
-                    value={gridState.cols}
-                    onChange={(e) => handleGridChange('cols', parseInt(e.target.value) || 1)}
-                    className="w-full px-3 py-2 glass-input"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Cell Size (px)</label>
-                  <input
-                    type="number"
-                    min="10" max="200"
-                    value={gridState.cellSize}
-                    onChange={(e) => handleGridChange('cellSize', parseInt(e.target.value) || 10)}
-                    className="w-full px-3 py-2 glass-input"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Line Width</label>
-                  <input
-                    type="number"
-                    min="0" max="20"
-                    value={gridState.lineThickness}
-                    onChange={(e) => handleGridChange('lineThickness', parseInt(e.target.value) || 0)}
-                    className="w-full px-3 py-2 glass-input"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 pt-1">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Line Color</label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="color"
-                      value={gridState.lineColor}
-                      onChange={(e) => handleGridChange('lineColor', e.target.value)}
-                      className="w-7 h-7 rounded border-0 p-0 cursor-pointer bg-transparent"
-                    />
-                    <input
-                      type="text"
-                      value={gridState.lineColor}
-                      onChange={(e) => handleGridChange('lineColor', e.target.value)}
-                      className="w-full px-2 py-1.5 glass-input text-xs uppercase"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Border Color</label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="color"
-                      value={gridState.borderColor}
-                      onChange={(e) => handleGridChange('borderColor', e.target.value)}
-                      className="w-7 h-7 rounded border-0 p-0 cursor-pointer bg-transparent"
-                    />
-                    <input
-                      type="text"
-                      value={gridState.borderColor}
-                      onChange={(e) => handleGridChange('borderColor', e.target.value)}
-                      className="w-full px-2 py-1.5 glass-input text-xs uppercase"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-1.5 pt-1">
-                <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Outer Border Width</label>
+          <ToolSection title="Grid Parameters">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Rows</label>
                 <input
                   type="number"
-                  min="0" max="50"
-                  value={gridState.borderThickness}
-                  onChange={(e) => handleGridChange('borderThickness', parseInt(e.target.value) || 0)}
+                  min="1" max="100"
+                  value={gridState.rows}
+                  onChange={(e) => handleGridChange('rows', parseInt(e.target.value) || 1)}
                   className="w-full px-3 py-2 glass-input"
                 />
               </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Cols</label>
+                <input
+                  type="number"
+                  min="1" max="100"
+                  value={gridState.cols}
+                  onChange={(e) => handleGridChange('cols', parseInt(e.target.value) || 1)}
+                  className="w-full px-3 py-2 glass-input"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Cell Size (px)</label>
+                <input
+                  type="number"
+                  min="10" max="200"
+                  value={gridState.cellSize}
+                  onChange={(e) => handleGridChange('cellSize', parseInt(e.target.value) || 10)}
+                  className="w-full px-3 py-2 glass-input"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Line Width</label>
+                <input
+                  type="number"
+                  min="0" max="20"
+                  value={gridState.lineThickness}
+                  onChange={(e) => handleGridChange('lineThickness', parseInt(e.target.value) || 0)}
+                  className="w-full px-3 py-2 glass-input"
+                />
+              </div>
+            </div>
 
-              {/* Global Inner Background Setting */}
-              <div className="pt-3 border-t border-slate-700/50 space-y-4">
-                <h3 className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">Global Inner</h3>
+            <div className="grid grid-cols-2 gap-4 pt-1">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Line Color</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={gridState.lineColor}
+                    onChange={(e) => handleGridChange('lineColor', e.target.value)}
+                    className="w-7 h-7 rounded border-0 p-0 cursor-pointer bg-transparent"
+                  />
+                  <input
+                    type="text"
+                    value={gridState.lineColor}
+                    onChange={(e) => handleGridChange('lineColor', e.target.value)}
+                    className="w-full px-2 py-1.5 glass-input text-xs uppercase"
+                  />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Border Color</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={gridState.borderColor}
+                    onChange={(e) => handleGridChange('borderColor', e.target.value)}
+                    className="w-7 h-7 rounded border-0 p-0 cursor-pointer bg-transparent"
+                  />
+                  <input
+                    type="text"
+                    value={gridState.borderColor}
+                    onChange={(e) => handleGridChange('borderColor', e.target.value)}
+                    className="w-full px-2 py-1.5 glass-input text-xs uppercase"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-1.5 pt-1">
+              <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Outer Border Width</label>
+              <input
+                type="number"
+                min="0" max="50"
+                value={gridState.borderThickness}
+                onChange={(e) => handleGridChange('borderThickness', parseInt(e.target.value) || 0)}
+                className="w-full px-3 py-2 glass-input"
+              />
+            </div>
+
+            {/* Global Inner Background Setting */}
+            <div className="pt-3 border-t border-neutral-800 space-y-4">
+              <h3 className="text-[10px] font-bold text-neutral-300 uppercase tracking-wider">Global Inner</h3>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Color</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={gridState.innerBgColor || '#ffffff'}
+                      onChange={(e) => handleGridChange('innerBgColor', e.target.value)}
+                      className="w-6 h-6 rounded border-0 p-0 cursor-pointer bg-transparent shrink-0"
+                    />
+                    <input
+                      type="text"
+                      value={gridState.innerBgColor || '#ffffff'}
+                      onChange={(e) => handleGridChange('innerBgColor', e.target.value)}
+                      className="w-full px-2 py-1 glass-input text-xs uppercase"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Opacity (0-100%)</label>
+                  <input
+                    type="number"
+                    min="0" max="100"
+                    value={Math.round((gridState.innerBgOpacity ?? 1) * 100)}
+                    onChange={(e) => {
+                      const val = Math.max(0, Math.min(100, parseInt(e.target.value) || 0));
+                      handleGridChange('innerBgOpacity', val / 100);
+                    }}
+                    className="w-full px-3 py-1.5 glass-input"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* External Margin Setting */}
+            <div className="pt-3 border-t border-neutral-800 space-y-4">
+              <h3 className="text-[10px] font-bold text-neutral-300 uppercase tracking-wider">External Margin</h3>
+              <div className="grid grid-cols-1 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Size (px)</label>
+                  <input
+                    type="number"
+                    min="0" max="500"
+                    value={gridState.externalMargin || 0}
+                    onChange={(e) => handleGridChange('externalMargin', parseInt(e.target.value) || 0)}
+                    className="w-full px-3 py-2 glass-input"
+                  />
+                </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Color</label>
+                    <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Color</label>
                     <div className="flex items-center gap-2">
                       <input
                         type="color"
-                        value={gridState.innerBgColor || '#ffffff'}
-                        onChange={(e) => handleGridChange('innerBgColor', e.target.value)}
+                        value={gridState.externalMarginColor || '#ffffff'}
+                        onChange={(e) => handleGridChange('externalMarginColor', e.target.value)}
                         className="w-6 h-6 rounded border-0 p-0 cursor-pointer bg-transparent shrink-0"
                       />
                       <input
                         type="text"
-                        value={gridState.innerBgColor || '#ffffff'}
-                        onChange={(e) => handleGridChange('innerBgColor', e.target.value)}
+                        value={gridState.externalMarginColor || '#ffffff'}
+                        onChange={(e) => handleGridChange('externalMarginColor', e.target.value)}
                         className="w-full px-2 py-1 glass-input text-xs uppercase"
                       />
                     </div>
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Opacity (0-100%)</label>
+                    <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Opacity (0-100%)</label>
                     <input
                       type="number"
                       min="0" max="100"
-                      value={Math.round((gridState.innerBgOpacity ?? 1) * 100)}
+                      value={Math.round((gridState.externalMarginOpacity ?? 0) * 100)}
                       onChange={(e) => {
                         const val = Math.max(0, Math.min(100, parseInt(e.target.value) || 0));
-                        handleGridChange('innerBgOpacity', val / 100);
+                        handleGridChange('externalMarginOpacity', val / 100);
                       }}
                       className="w-full px-3 py-1.5 glass-input"
                     />
                   </div>
                 </div>
               </div>
+            </div>
 
-              {/* External Margin Setting */}
-              <div className="pt-3 border-t border-slate-700/50 space-y-4">
-                <h3 className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">External Margin</h3>
-                <div className="grid grid-cols-1 gap-3">
+            {/* Workspace Background Setting */}
+            <div className="pt-3 border-t border-neutral-800 space-y-4">
+              <h3 className="text-[10px] font-bold text-neutral-300 uppercase tracking-wider">Workspace Background</h3>
+              <div className="grid grid-cols-1 gap-3">
+                <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Size (px)</label>
-                    <input
-                      type="number"
-                      min="0" max="500"
-                      value={gridState.externalMargin || 0}
-                      onChange={(e) => handleGridChange('externalMargin', parseInt(e.target.value) || 0)}
-                      className="w-full px-3 py-2 glass-input"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Color</label>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="color"
-                          value={gridState.externalMarginColor || '#ffffff'}
-                          onChange={(e) => handleGridChange('externalMarginColor', e.target.value)}
-                          className="w-6 h-6 rounded border-0 p-0 cursor-pointer bg-transparent shrink-0"
-                        />
-                        <input
-                          type="text"
-                          value={gridState.externalMarginColor || '#ffffff'}
-                          onChange={(e) => handleGridChange('externalMarginColor', e.target.value)}
-                          className="w-full px-2 py-1 glass-input text-xs uppercase"
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Opacity (0-100%)</label>
+                    <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Color</label>
+                    <div className="flex items-center gap-2">
                       <input
-                        type="number"
-                        min="0" max="100"
-                        value={Math.round((gridState.externalMarginOpacity ?? 0) * 100)}
-                        onChange={(e) => {
-                          const val = Math.max(0, Math.min(100, parseInt(e.target.value) || 0));
-                          handleGridChange('externalMarginOpacity', val / 100);
-                        }}
-                        className="w-full px-3 py-1.5 glass-input"
+                        type="color"
+                        value={gridState.workspaceBgColor || '#000000'}
+                        onChange={(e) => handleGridChange('workspaceBgColor', e.target.value)}
+                        className="w-6 h-6 rounded border-0 p-0 cursor-pointer bg-transparent shrink-0"
+                      />
+                      <input
+                        type="text"
+                        value={gridState.workspaceBgColor || '#000000'}
+                        onChange={(e) => handleGridChange('workspaceBgColor', e.target.value)}
+                        className="w-full px-2 py-1 glass-input text-xs uppercase"
                       />
                     </div>
                   </div>
-                </div>
-              </div>
-
-              {/* Workspace Background Setting */}
-              <div className="pt-3 border-t border-slate-700/50 space-y-4">
-                <h3 className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">Workspace Background</h3>
-                <div className="grid grid-cols-1 gap-3">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Color</label>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="color"
-                          value={gridState.workspaceBgColor || '#0f172a'}
-                          onChange={(e) => handleGridChange('workspaceBgColor', e.target.value)}
-                          className="w-6 h-6 rounded border-0 p-0 cursor-pointer bg-transparent shrink-0"
-                        />
-                        <input
-                          type="text"
-                          value={gridState.workspaceBgColor || '#0f172a'}
-                          onChange={(e) => handleGridChange('workspaceBgColor', e.target.value)}
-                          className="w-full px-2 py-1 glass-input text-xs uppercase"
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-1.5 flex flex-col justify-end">
+                  <div className="space-y-1.5 flex flex-col justify-end">
                        <button
                          onClick={() => handleGridChange('workspaceBgImageUrl', '')}
                          className="btn-danger w-full py-1 text-[10px]"
@@ -774,7 +764,7 @@ export default function App() {
                     </div>
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Texture (URL or SVG code)</label>
+                    <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Texture (URL or SVG code)</label>
                     <textarea
                       value={gridState.workspaceBgImageUrl || ''}
                       onChange={(e) => handleGridChange('workspaceBgImageUrl', e.target.value)}
@@ -785,8 +775,7 @@ export default function App() {
                 </div>
               </div>
 
-            </div>
-          </section>
+            </ToolSection>
 
           {/* Background Tools */}
           <ToolSection title="Background Tools">
@@ -797,17 +786,17 @@ export default function App() {
             </div>
 
             {activeTool === 'bg-color' && (
-              <div className="space-y-3 p-4 glass-card">
+              <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Select Color</label>
-                  <button onClick={() => setShowAssetManager(true)} className="text-[10px] text-indigo-400 hover:text-indigo-300 font-medium uppercase tracking-wider transition-colors">Manage</button>
+                  <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Select Color</label>
+                  <button onClick={() => setShowAssetManager(true)} className="text-[10px] text-neutral-400 hover:text-neutral-300 font-medium uppercase tracking-wider transition-colors">Manage</button>
                 </div>
                 <div className="grid grid-cols-4 gap-2">
                   {savedColors.map(color => (
                     <button
                       key={color.id}
                       onClick={() => setCurrentColor(color.value)}
-                      className={`h-8 rounded-md border transition-all ${currentColor === color.value ? 'ring-2 ring-indigo-500 ring-offset-2 ring-offset-slate-900 border-transparent scale-110 shadow-lg' : 'border-slate-600/50 hover:border-slate-400 hover:scale-105'}`}
+                      className={`h-8 rounded-md border transition-all ${currentColor === color.value ? 'ring-2 ring-neutral-500 ring-offset-2 ring-offset-neutral-900 border-transparent scale-110 shadow-lg' : 'border-neutral-600/50 hover:border-neutral-400 hover:scale-105'}`}
                       style={{ backgroundColor: color.value }}
                       title={color.name}
                     />
@@ -817,17 +806,17 @@ export default function App() {
             )}
 
             {activeTool === 'bg-svg' && (
-              <div className="space-y-3 p-4 glass-card">
+              <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Select Background SVG</label>
-                  <button onClick={() => setShowAssetManager(true)} className="text-[10px] text-indigo-400 hover:text-indigo-300 font-medium uppercase tracking-wider transition-colors">Manage</button>
+                  <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Select Background SVG</label>
+                  <button onClick={() => setShowAssetManager(true)} className="text-[10px] text-neutral-400 hover:text-neutral-300 font-medium uppercase tracking-wider transition-colors">Manage</button>
                 </div>
                 <div className="grid grid-cols-3 gap-2">
                   {savedBgSvgs.map(svg => (
                     <button
                       key={svg.id}
                       onClick={() => setCurrentBgSvg(svg.value)}
-                      className={`h-12 rounded-md border flex items-center justify-center overflow-hidden transition-all bg-slate-800 ${currentBgSvg === svg.value ? 'ring-2 ring-indigo-500 ring-offset-2 ring-offset-slate-900 border-transparent shadow-lg' : 'border-slate-600/50 hover:border-slate-400'}`}
+                      className={`h-12 rounded-md border flex items-center justify-center overflow-hidden transition-all bg-neutral-800 ${currentBgSvg === svg.value ? 'ring-2 ring-neutral-500 ring-offset-2 ring-offset-neutral-900 border-transparent shadow-lg' : 'border-neutral-600/50 hover:border-neutral-400'}`}
                       title={svg.name}
                       dangerouslySetInnerHTML={{ __html: svg.value }}
                     />
@@ -845,17 +834,17 @@ export default function App() {
             </div>
 
             {activeTool === 'item-svg' && (
-              <div className="space-y-3 p-4 glass-card">
+              <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Select Item SVG</label>
-                  <button onClick={() => setShowAssetManager(true)} className="text-[10px] text-indigo-400 hover:text-indigo-300 font-medium uppercase tracking-wider transition-colors">Manage</button>
+                  <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Select Item SVG</label>
+                  <button onClick={() => setShowAssetManager(true)} className="text-[10px] text-neutral-400 hover:text-neutral-300 font-medium uppercase tracking-wider transition-colors">Manage</button>
                 </div>
                 <div className="grid grid-cols-3 gap-2">
                   {savedItemSvgs.map(svg => (
                     <button
                       key={svg.id}
                       onClick={() => setCurrentItemSvg(svg.value)}
-                      className={`h-12 rounded-md border flex items-center justify-center overflow-hidden transition-all bg-slate-800 ${currentItemSvg === svg.value ? 'ring-2 ring-indigo-500 ring-offset-2 ring-offset-slate-900 border-transparent shadow-lg' : 'border-slate-600/50 hover:border-slate-400'}`}
+                      className={`h-12 rounded-md border flex items-center justify-center overflow-hidden transition-all bg-neutral-800 ${currentItemSvg === svg.value ? 'ring-2 ring-neutral-500 ring-offset-2 ring-offset-neutral-900 border-transparent shadow-lg' : 'border-neutral-600/50 hover:border-neutral-400'}`}
                       title={svg.name}
                       dangerouslySetInnerHTML={{ __html: svg.value }}
                     />
@@ -873,9 +862,9 @@ export default function App() {
             </div>
 
             {activeTool === 'label' && (
-              <div className="space-y-4 p-4 glass-card">
+              <div className="space-y-4">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Label Text</label>
+                  <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Label Text</label>
                   <input
                     type="text"
                     value={currentLabelText}
@@ -887,7 +876,7 @@ export default function App() {
                 
                 <div className="grid grid-cols-2 gap-3 mt-2">
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Font Select</label>
+                    <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Font Select</label>
                     <select
                       value={currentLabelFont}
                       onChange={(e) => setCurrentLabelFont(e.target.value)}
@@ -903,7 +892,7 @@ export default function App() {
                     </select>
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Size (px)</label>
+                    <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Size (px)</label>
                     <input
                       type="number"
                       min="8" max="100"
@@ -915,31 +904,31 @@ export default function App() {
                 </div>
 
                 <div className="space-y-1.5 mt-2">
-                  <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Alignment</label>
-                  <div className="flex bg-slate-900/50 p-1 rounded-lg border border-slate-700/50">
+                  <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Alignment</label>
+                  <div className="flex bg-neutral-900/50 p-1 rounded-lg border border-neutral-700/50">
                     <button
                       onClick={() => setCurrentLabelAlign('start')}
-                      className={`flex-1 py-1.5 text-[11px] font-semibold rounded-md transition-all ${currentLabelAlign === 'start' ? 'bg-indigo-500/20 text-indigo-400 shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
+                      className={`flex-1 py-1.5 text-[11px] font-semibold rounded-md transition-all ${currentLabelAlign === 'start' ? 'bg-neutral-500/20 text-neutral-400 shadow-sm' : 'text-neutral-400 hover:text-neutral-200'}`}
                     >
                       Start
                     </button>
                     <button
                       onClick={() => setCurrentLabelAlign('center')}
-                      className={`flex-1 py-1.5 text-[11px] font-semibold rounded-md transition-all ${currentLabelAlign === 'center' ? 'bg-indigo-500/20 text-indigo-400 shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
+                      className={`flex-1 py-1.5 text-[11px] font-semibold rounded-md transition-all ${currentLabelAlign === 'center' ? 'bg-neutral-500/20 text-neutral-400 shadow-sm' : 'text-neutral-400 hover:text-neutral-200'}`}
                     >
                       Center
                     </button>
                     <button
                       onClick={() => setCurrentLabelAlign('end')}
-                      className={`flex-1 py-1.5 text-[11px] font-semibold rounded-md transition-all ${currentLabelAlign === 'end' ? 'bg-indigo-500/20 text-indigo-400 shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
+                      className={`flex-1 py-1.5 text-[11px] font-semibold rounded-md transition-all ${currentLabelAlign === 'end' ? 'bg-neutral-500/20 text-neutral-400 shadow-sm' : 'text-neutral-400 hover:text-neutral-200'}`}
                     >
                       End
                     </button>
                   </div>
                 </div>
 
-                <div className="space-y-1.5 mt-2 pt-2 border-t border-slate-700/50">
-                  <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Text Color</label>
+                <div className="pt-4 border-t border-neutral-800">
+                  <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Text Color</label>
                   <div className="flex items-center gap-2">
                     <input
                       type="color"
@@ -967,33 +956,33 @@ export default function App() {
             </div>
 
             {(activeTool === 'cell-border' || activeTool === 'cell-border-eraser') && (
-              <div className="space-y-5 p-4 glass-card">
+              <div className="space-y-5">
                 <div className="space-y-3">
-                  <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider text-center block">Edges to Apply/Erase</label>
-                  <div className="flex justify-center items-center gap-1 p-3 bg-slate-900/50 rounded-xl border border-slate-700/50 w-fit mx-auto shadow-inner">
+                  <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider text-center block">Edges to Apply/Erase</label>
+                  <div className="flex justify-center items-center gap-1 p-3 bg-neutral-900/50 rounded-xl border border-neutral-700/50 w-fit mx-auto shadow-inner">
                     <div className="grid grid-cols-3 grid-rows-3 gap-1 w-16 h-16">
                       <div />
                       <button
                         onClick={() => toggleEdge('top')}
-                        className={`rounded-sm transition-all ${activeEdges.top ? 'bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]' : 'bg-slate-700 hover:bg-slate-600'}`}
+                        className={`rounded-sm transition-all ${activeEdges.top ? 'bg-neutral-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]' : 'bg-neutral-700 hover:bg-neutral-600'}`}
                         title="Top Edge"
                       />
                       <div />
                       <button
                         onClick={() => toggleEdge('left')}
-                        className={`rounded-sm transition-all ${activeEdges.left ? 'bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]' : 'bg-slate-700 hover:bg-slate-600'}`}
+                        className={`rounded-sm transition-all ${activeEdges.left ? 'bg-neutral-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]' : 'bg-neutral-700 hover:bg-neutral-600'}`}
                         title="Left Edge"
                       />
-                      <div className="bg-slate-800 rounded-sm border border-slate-600/50" />
+                      <div className="bg-neutral-800 rounded-sm border border-neutral-600/50" />
                       <button
                         onClick={() => toggleEdge('right')}
-                        className={`rounded-sm transition-all ${activeEdges.right ? 'bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]' : 'bg-slate-700 hover:bg-slate-600'}`}
+                        className={`rounded-sm transition-all ${activeEdges.right ? 'bg-neutral-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]' : 'bg-neutral-700 hover:bg-neutral-600'}`}
                         title="Right Edge"
                       />
                       <div />
                       <button
                         onClick={() => toggleEdge('bottom')}
-                        className={`rounded-sm transition-all ${activeEdges.bottom ? 'bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]' : 'bg-slate-700 hover:bg-slate-600'}`}
+                        className={`rounded-sm transition-all ${activeEdges.bottom ? 'bg-neutral-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]' : 'bg-neutral-700 hover:bg-neutral-600'}`}
                         title="Bottom Edge"
                       />
                       <div />
@@ -1002,9 +991,9 @@ export default function App() {
                 </div>
 
                 {activeTool === 'cell-border' && (
-                  <div className="pt-2 border-t border-slate-700/50 space-y-4">
+                  <div className="pt-2 border-t border-neutral-700/50 space-y-4">
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Border Width (px)</label>
+                      <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Border Width (px)</label>
                       <input
                         type="number"
                         min="1" max="20"
@@ -1014,30 +1003,30 @@ export default function App() {
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Alignment</label>
-                      <div className="flex bg-slate-900/50 p-1 rounded-lg border border-slate-700/50">
+                      <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Alignment</label>
+                      <div className="flex bg-neutral-900/50 p-1 rounded-lg border border-neutral-700/50">
                         <button
                           onClick={() => setCurrentCellBorderAlignment('inner')}
-                          className={`flex-1 py-1.5 text-[11px] font-semibold rounded-md transition-all ${currentCellBorderAlignment === 'inner' ? 'bg-indigo-500/20 text-indigo-400 shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
+                          className={`flex-1 py-1.5 text-[11px] font-semibold rounded-md transition-all ${currentCellBorderAlignment === 'inner' ? 'bg-neutral-500/20 text-neutral-400 shadow-sm' : 'text-neutral-400 hover:text-neutral-200'}`}
                         >
                           Inner
                         </button>
                         <button
                           onClick={() => setCurrentCellBorderAlignment('center')}
-                          className={`flex-1 py-1.5 text-[11px] font-semibold rounded-md transition-all ${currentCellBorderAlignment === 'center' ? 'bg-indigo-500/20 text-indigo-400 shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
+                          className={`flex-1 py-1.5 text-[11px] font-semibold rounded-md transition-all ${currentCellBorderAlignment === 'center' ? 'bg-neutral-500/20 text-neutral-400 shadow-sm' : 'text-neutral-400 hover:text-neutral-200'}`}
                         >
                           Center
                         </button>
                         <button
                           onClick={() => setCurrentCellBorderAlignment('outer')}
-                          className={`flex-1 py-1.5 text-[11px] font-semibold rounded-md transition-all ${currentCellBorderAlignment === 'outer' ? 'bg-indigo-500/20 text-indigo-400 shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
+                          className={`flex-1 py-1.5 text-[11px] font-semibold rounded-md transition-all ${currentCellBorderAlignment === 'outer' ? 'bg-neutral-500/20 text-neutral-400 shadow-sm' : 'text-neutral-400 hover:text-neutral-200'}`}
                         >
                           Outer
                         </button>
                       </div>
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Border Color</label>
+                      <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Border Color</label>
                       <div className="flex items-center gap-2">
                         <input
                           type="color"
@@ -1060,11 +1049,9 @@ export default function App() {
           </ToolSection>
 
           {/* General Tools */}
-          <section className="space-y-4 pt-2 border-t border-slate-700/50 mt-4">
+          <section className="space-y-4 pt-2 border-t border-neutral-700/50 mt-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-[11px] font-bold text-indigo-400/80 uppercase tracking-widest flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-indigo-500"></span> General Tools
-              </h2>
+              <h2 className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest px-1">General Tools</h2>
               <button
                 onClick={() => setGridState(prev => ({ ...prev, cells: {} }))}
                 className="text-[10px] font-bold text-rose-400 hover:text-rose-300 uppercase tracking-widest transition-colors px-2 py-1 rounded hover:bg-rose-500/10"
@@ -1095,13 +1082,14 @@ export default function App() {
       </aside>
 
       {/* Main Grid Area */}
-      <main className="flex-1 flex flex-col overflow-hidden bg-slate-950 relative">
-        {/* Top Menu Bar */}
-        <header className="h-16 border-b border-slate-700/50 bg-slate-900/80 backdrop-blur-xl flex items-center justify-between px-6 z-20 shrink-0 shadow-lg">
+      <main className="flex-1 flex flex-col min-w-0 bg-neutral-950">
+        <header className="h-16 border-b border-neutral-800 bg-black flex items-center justify-between px-6 shrink-0 z-20">
           <div className="flex items-center gap-4">
-            <div className="px-4 py-1.5 glass-panel rounded-full flex items-center gap-2 border border-indigo-500/20 shadow-[0_0_15px_rgba(79,70,229,0.15)]">
+            <h1 className="text-xl font-bold bg-gradient-to-r from-neutral-100 to-neutral-400 bg-clip-text text-transparent italic tracking-tight">craft_matrix</h1>
+            <div className="h-6 w-px bg-neutral-800"></div>
+            <div className="flex items-center gap-2 text-sm text-neutral-400">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span className="text-xs font-mono text-indigo-200 tracking-wider font-bold">WORKSPACE ACTIVE</span>
+              <span className="text-xs font-mono text-neutral-200 tracking-wider font-bold">WORKSPACE ACTIVE</span>
             </div>
           </div>
 
