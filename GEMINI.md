@@ -119,10 +119,13 @@ Abaixo está o mapeamento analítico (JSON Schema) que padroniza todos os elemen
     "components": {
       "containers": {
         "panel": "bg-black border-r/l/t/b border-neutral-800",
-        "card": "bg-neutral-950 border border-neutral-800 transition-colors hover:border-neutral-500 (Agrupa blocos isolados nas seções de ferramentas, substituindo antigas sombras)"
+        "card": "bg-neutral-950 border border-neutral-800 transition-colors hover:border-neutral-500 (Agrupa blocos isolados nas seções de ferramentas, substituindo antigas sombras)",
+        "tool-section": "space-y-4 pb-6 border-b border-neutral-800 (Divisores lineares entre grupos de ferramentas)"
       },
       "inputs": {
-        "input": "bg-black border border-neutral-800 text-[10px] font-bold uppercase tracking-widest text-neutral-200 focus:ring-1 focus:ring-white focus:border-white transition-all (Campos de formulários sutis que ganham foco na interação)"
+        "input": "bg-black border border-neutral-800 text-[10px] font-bold uppercase tracking-widest text-neutral-200 focus:ring-1 focus:ring-white focus:border-white transition-all (Campos de formulários sutis que ganham foco na interação)",
+        "color-input-wrapper": "flex h-8 bg-black border border-neutral-800 rounded-sm focus-within:ring-1 focus-within:ring-white transition-all overflow-hidden (Garante que o input type color e o input text se fundam num mesmo bloco visual contínuo)",
+        "seamless-color": "Utilitário CSS customizado (.seamless-color) no index.css que remove os estilos nativos de bordas e preenchimentos do seletor nativo do navegador para o input type=color"
       },
       "buttons": {
         "btn-primary": "bg-white hover:bg-neutral-200 text-black text-[10px] uppercase tracking-widest font-bold transition-colors (Ações de alta prioridade: Export SVG/PNG, Save, Load)",
@@ -132,7 +135,7 @@ Abaixo está o mapeamento analítico (JSON Schema) que padroniza todos os elemen
         "tool-btn-inactive": "bg-neutral-950 hover:bg-neutral-900 text-neutral-500 hover:text-neutral-300 border border-neutral-800 transition-colors (Ferramenta não selecionada)"
       },
       "layout": {
-        "sidebar": "w-80 flex-col overflow-y-auto z-10 bg-black border-r border-neutral-800 (Painel fixo do lado esquerdo com linhas precisas)",
+        "sidebar": "w-80 flex-col overflow-y-auto z-10 bg-black border-r border-neutral-800 bg-black (Painel fixo do lado esquerdo com linhas precisas e ícones discretos do Lucide React)",
         "header": "h-16 border-b border-neutral-800 bg-black z-20 (Barra superior para status do repositório/workspace/exporter)",
         "workspace": "flex-1 overflow-auto bg-black relative (Sustenta a renderização HTML do loop de células grid e opções de textura pura SVG)"
       }
