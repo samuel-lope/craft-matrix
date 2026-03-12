@@ -46,6 +46,12 @@ Abaixo está o mapeamento descritivo em formato JSON que detalha os atributos e 
     "bgType": "Tipo de fundo da célula ('color' para cor sólida, 'svg' para imagem vetorial)",
     "bgValue": "Valor hexadecimal da cor ou string de código SVG do fundo da célula",
     "itemValue": "Código SVG do item flutuante posicionado sobre o fundo da célula",
+    "label": {
+      "text": "Conteúdo de texto a ser renderizado na célula",
+      "font": "Família de fonte tipográfica",
+      "size": "Tamanho da fonte em pixels",
+      "color": "Cor do texto em valor Hex"
+    },
     "borders": {
       "borderTop": "Configuração da borda superior (largura, cor, alinhamento)",
       "borderRight": "Configuração da borda direita (largura, cor, alinhamento)",
@@ -59,6 +65,7 @@ Abaixo está o mapeamento descritivo em formato JSON que detalha os atributos e 
 ### 🛠️ Ferramentas de Interação (Interação na Célula)
 - **Background Tools**: Pinte com cor sólida (`bg-color`), insira um código SVG ajustado em 100% sob a célula (`bg-svg`) ou apague a camada de fundo (`bg-eraser`).
 - **Item Tools**: Permite inserir um código SVG flutuando acima do background (`item-svg`) ou apagá-lo da célula (`item-eraser`).
+- **Label Tools**: Permite inserir texto (`label`) perfeitamente centralizado em tipografia editável (fonte, tamanho e cor) que flutua acima de todos os outros elementos do grid, ou apagá-lo (`label-eraser`).
 - **Cell Border Tools**: Aplique (`cell-border`) ou remova (`cell-border-eraser`) bordas de células específicas, escolhendo o lado afetado (Top, Right, Bottom, Left), a espessura, a cor e o comportamento de alinhamento (`inner`, `center`, `outer`).
 - **General Tools**: Ferramenta `Pointer` passiva, além da ferramenta `Eraser Area` para apagar todo o conteúdo apenas da camada atualmente selecionada em toda a grade, e um botão extra de limpeza completa do grid.
 

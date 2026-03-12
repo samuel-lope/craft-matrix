@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { Settings, MousePointer2, PaintBucket, Image as ImageIcon, Eraser, Download, Square, Library, FolderOpen, Save } from 'lucide-react';
+import { Settings, MousePointer2, PaintBucket, Image as ImageIcon, Eraser, Download, Square, Library, FolderOpen, Save, Type } from 'lucide-react';
 import * as htmlToImage from 'html-to-image';
 import { CellData, GridState, Tool, CellBorder, BorderAlignment, SavedAsset, SavedGrid } from './types';
 import AssetManager from './AssetManager';
@@ -126,6 +126,22 @@ const MemoizedCell = React.memo(({ rowIndex, colIndex, cellData, cellSize, lineT
           dangerouslySetInnerHTML={{ __html: cellData.itemValue }}
         />
       )}
+
+      {/* Label Layer (Z-index 20) - Topmost layer */}
+      {cellData?.label && (
+        <div
+          className="absolute z-[20] flex items-center justify-center pointer-events-none w-full h-full"
+          style={{
+            fontFamily: cellData.label.font,
+            fontSize: `${cellData.label.size}px`,
+            color: cellData.label.color,
+            lineHeight: 1,
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {cellData.label.text}
+        </div>
+      )}
     </div>
   );
 });
@@ -151,6 +167,11 @@ export default function App() {
   const [currentColor, setCurrentColor] = useState<string>('rgba(59, 130, 246, 0.5)');
   const [currentBgSvg, setCurrentBgSvg] = useState<string>('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%"><rect width="100" height="100" fill="#fef08a" /></svg>');
   const [currentItemSvg, setCurrentItemSvg] = useState<string>('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="120" height="120"><circle cx="50" cy="50" r="40" fill="red" opacity="0.8" /></svg>');
+  
+  const [currentLabelText, setCurrentLabelText] = useState<string>('A');
+  const [currentLabelFont, setCurrentLabelFont] = useState<string>('Inter, sans-serif');
+  const [currentLabelSize, setCurrentLabelSize] = useState<number>(24);
+  const [currentLabelColor, setCurrentLabelColor] = useState<string>('#ffffff');
 
   const [savedColors, setSavedColors] = useState<SavedAsset[]>([
     { id: 'c1', name: 'Blue Semi-transparent', value: 'rgba(59, 130, 246, 0.5)' },
@@ -192,6 +213,10 @@ export default function App() {
     currentColor,
     currentBgSvg,
     currentItemSvg,
+    currentLabelText,
+    currentLabelFont,
+    currentLabelSize,
+    currentLabelColor,
     currentCellBorderWidth,
     currentCellBorderColor,
     currentCellBorderAlignment,
@@ -204,12 +229,16 @@ export default function App() {
       currentColor,
       currentBgSvg,
       currentItemSvg,
+      currentLabelText,
+      currentLabelFont,
+      currentLabelSize,
+      currentLabelColor,
       currentCellBorderWidth,
       currentCellBorderColor,
       currentCellBorderAlignment,
       activeEdges
     };
-  }, [activeTool, currentColor, currentBgSvg, currentItemSvg, currentCellBorderWidth, currentCellBorderColor, currentCellBorderAlignment, activeEdges]);
+  }, [activeTool, currentColor, currentBgSvg, currentItemSvg, currentLabelText, currentLabelFont, currentLabelSize, currentLabelColor, currentCellBorderWidth, currentCellBorderColor, currentCellBorderAlignment, activeEdges]);
 
   // Load assets from LocalStorage on mount
   useEffect(() => {
@@ -301,6 +330,10 @@ export default function App() {
       currentColor,
       currentBgSvg,
       currentItemSvg,
+      currentLabelText,
+      currentLabelFont,
+      currentLabelSize,
+      currentLabelColor,
       currentCellBorderWidth,
       currentCellBorderColor,
       currentCellBorderAlignment,
@@ -321,6 +354,18 @@ export default function App() {
         newCells[key] = { ...currentCell, itemValue: currentItemSvg };
       } else if (activeTool === 'item-eraser') {
         newCells[key] = { ...currentCell, itemValue: undefined };
+      } else if (activeTool === 'label') {
+        newCells[key] = { 
+          ...currentCell, 
+          label: {
+            text: currentLabelText,
+            font: currentLabelFont,
+            size: currentLabelSize,
+            color: currentLabelColor
+          } 
+        };
+      } else if (activeTool === 'label-eraser') {
+        newCells[key] = { ...currentCell, label: undefined };
       } else if (activeTool === 'cell-border') {
         newCells[key] = {
           ...currentCell,
@@ -342,7 +387,7 @@ export default function App() {
       }
 
       // Clean up empty cells
-      if (newCells[key] && !newCells[key].bgType && !newCells[key].itemValue &&
+      if (newCells[key] && !newCells[key].bgType && !newCells[key].itemValue && !newCells[key].label &&
         !newCells[key].borderTop && !newCells[key].borderRight &&
         !newCells[key].borderBottom && !newCells[key].borderLeft) {
         delete newCells[key];
@@ -743,6 +788,91 @@ export default function App() {
                       dangerouslySetInnerHTML={{ __html: svg.value }}
                     />
                   ))}
+                </div>
+              </div>
+            )}
+          </section>
+
+          {/* Label Tools */}
+          <section className="space-y-4">
+            <h2 className="text-[11px] font-bold text-indigo-400/80 uppercase tracking-widest flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500"></span> Label Tools
+            </h2>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => setActiveTool('label')}
+                className={`p-2 rounded-lg flex justify-center items-center transition-all ${activeTool === 'label' ? 'tool-btn-active' : 'tool-btn-inactive'}`}
+                title="Place Text Label"
+              >
+                <Type className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => setActiveTool('label-eraser')}
+                className={`p-2 rounded-lg flex justify-center items-center transition-all ${activeTool === 'label-eraser' ? 'tool-btn-active' : 'tool-btn-inactive'}`}
+                title="Erase Text Label"
+              >
+                <Eraser className="w-5 h-5" />
+              </button>
+            </div>
+
+            {activeTool === 'label' && (
+              <div className="space-y-4 p-4 glass-card">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Label Text</label>
+                  <input
+                    type="text"
+                    value={currentLabelText}
+                    onChange={(e) => setCurrentLabelText(e.target.value)}
+                    placeholder="E.g. Room 1"
+                    className="w-full px-3 py-2 glass-input"
+                  />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3 mt-2">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Font Select</label>
+                    <select
+                      value={currentLabelFont}
+                      onChange={(e) => setCurrentLabelFont(e.target.value)}
+                      className="w-full px-2 py-2 glass-input text-xs"
+                    >
+                      <option value="Inter, sans-serif">Inter</option>
+                      <option value="Arial, sans-serif">Arial</option>
+                      <option value="'Courier New', Courier, monospace">Courier New</option>
+                      <option value="'Times New Roman', Times, serif">Times New</option>
+                      <option value="'Comic Sans MS', cursive, sans-serif">Comic Sans</option>
+                      <option value="'Georgia', serif">Georgia</option>
+                       <option value="'Trebuchet MS', sans-serif">Trebuchet</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Size (px)</label>
+                    <input
+                      type="number"
+                      min="8" max="100"
+                      value={currentLabelSize}
+                      onChange={(e) => setCurrentLabelSize(parseInt(e.target.value) || 12)}
+                      className="w-full px-3 py-2 glass-input"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5 mt-2 pt-2 border-t border-slate-700/50">
+                  <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Text Color</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={currentLabelColor}
+                      onChange={(e) => setCurrentLabelColor(e.target.value)}
+                      className="w-7 h-7 rounded border-0 p-0 cursor-pointer bg-transparent"
+                    />
+                    <input
+                      type="text"
+                      value={currentLabelColor}
+                      onChange={(e) => setCurrentLabelColor(e.target.value)}
+                      className="w-full px-2 py-1.5 glass-input text-xs uppercase"
+                    />
+                  </div>
                 </div>
               </div>
             )}
