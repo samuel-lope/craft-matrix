@@ -975,10 +975,10 @@ export default function App() {
               )}
 
               <div
-                className="relative z-10"
+                className="relative z-10 box-border"
                 style={{
-                  padding: gridState.borderThickness,
-                  backgroundColor: gridState.borderColor,
+                  border: `${gridState.borderThickness}px solid ${gridState.borderColor}`,
+                  // Outer padding and background color removed to prevent "fill" behavior
                 }}
               >
                 <div className="relative">
