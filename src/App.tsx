@@ -185,7 +185,31 @@ const MemoizedCell = React.memo(({ rowIndex, colIndex, cellData, cellSize, lineT
             whiteSpace: 'nowrap',
           }}
         >
-          {cellData.label.text}
+          {(cellData.label.frameBgColor || cellData.label.frameBorderWidth) ? (
+            <span
+              style={{
+                backgroundColor: cellData.label.frameBgColor
+                  ? (() => {
+                      const opacity = cellData.label.frameBgOpacity ?? 1;
+                      const hex = cellData.label.frameBgColor;
+                      if (opacity >= 1) return hex;
+                      const alphaHex = Math.round(opacity * 255).toString(16).padStart(2, '0');
+                      return hex.length === 7 ? hex + alphaHex : hex;
+                    })()
+                  : 'transparent',
+                border: cellData.label.frameBorderWidth
+                  ? `${cellData.label.frameBorderWidth}px solid ${cellData.label.frameBorderColor || '#000000'}`
+                  : 'none',
+                borderRadius: `${cellData.label.frameRadius ?? 0}px`,
+                padding: `${cellData.label.framePadding ?? 0}px`,
+                display: 'inline-block',
+              }}
+            >
+              {cellData.label.text}
+            </span>
+          ) : (
+            cellData.label.text
+          )}
         </div>
       )}
     </div>
@@ -221,6 +245,14 @@ export default function App() {
   const [currentLabelSize, setCurrentLabelSize] = useState<number>(24);
   const [currentLabelColor, setCurrentLabelColor] = useState<string>('#ffffff');
   const [currentLabelAlign, setCurrentLabelAlign] = useState<'start' | 'center' | 'end'>('center');
+
+  const [currentLabelFrameEnabled, setCurrentLabelFrameEnabled] = useState<boolean>(false);
+  const [currentLabelFrameBgColor, setCurrentLabelFrameBgColor] = useState<string>('#ffffff');
+  const [currentLabelFrameBgOpacity, setCurrentLabelFrameBgOpacity] = useState<number>(1);
+  const [currentLabelFrameBorderColor, setCurrentLabelFrameBorderColor] = useState<string>('#000000');
+  const [currentLabelFrameBorderWidth, setCurrentLabelFrameBorderWidth] = useState<number>(1);
+  const [currentLabelFrameRadius, setCurrentLabelFrameRadius] = useState<number>(4);
+  const [currentLabelFramePadding, setCurrentLabelFramePadding] = useState<number>(4);
 
   const [savedColors, setSavedColors] = useState<SavedAsset[]>([
     { id: 'c1', name: 'Blue Semi-transparent', value: 'rgba(59, 130, 246, 0.5)' },
@@ -274,6 +306,13 @@ export default function App() {
     currentLabelSize,
     currentLabelColor,
     currentLabelAlign,
+    currentLabelFrameEnabled,
+    currentLabelFrameBgColor,
+    currentLabelFrameBgOpacity,
+    currentLabelFrameBorderColor,
+    currentLabelFrameBorderWidth,
+    currentLabelFrameRadius,
+    currentLabelFramePadding,
     currentCellBorderWidth,
     currentCellBorderColor,
     currentCellBorderAlignment,
@@ -291,12 +330,19 @@ export default function App() {
       currentLabelSize,
       currentLabelColor,
       currentLabelAlign,
+      currentLabelFrameEnabled,
+      currentLabelFrameBgColor,
+      currentLabelFrameBgOpacity,
+      currentLabelFrameBorderColor,
+      currentLabelFrameBorderWidth,
+      currentLabelFrameRadius,
+      currentLabelFramePadding,
       currentCellBorderWidth,
       currentCellBorderColor,
       currentCellBorderAlignment,
       activeEdges
     };
-  }, [activeTool, currentColor, currentBgSvg, currentItemSvg, currentLabelText, currentLabelFont, currentLabelSize, currentLabelColor, currentLabelAlign, currentCellBorderWidth, currentCellBorderColor, currentCellBorderAlignment, activeEdges]);
+  }, [activeTool, currentColor, currentBgSvg, currentItemSvg, currentLabelText, currentLabelFont, currentLabelSize, currentLabelColor, currentLabelAlign, currentLabelFrameEnabled, currentLabelFrameBgColor, currentLabelFrameBgOpacity, currentLabelFrameBorderColor, currentLabelFrameBorderWidth, currentLabelFrameRadius, currentLabelFramePadding, currentCellBorderWidth, currentCellBorderColor, currentCellBorderAlignment, activeEdges]);
 
   // Load assets from LocalStorage on mount
   useEffect(() => {
@@ -467,6 +513,13 @@ export default function App() {
       currentLabelSize,
       currentLabelColor,
       currentLabelAlign,
+      currentLabelFrameEnabled,
+      currentLabelFrameBgColor,
+      currentLabelFrameBgOpacity,
+      currentLabelFrameBorderColor,
+      currentLabelFrameBorderWidth,
+      currentLabelFrameRadius,
+      currentLabelFramePadding,
       currentCellBorderWidth,
       currentCellBorderColor,
       currentCellBorderAlignment,
@@ -495,7 +548,15 @@ export default function App() {
             font: currentLabelFont,
             size: currentLabelSize,
             color: currentLabelColor,
-            align: currentLabelAlign
+            align: currentLabelAlign,
+            ...(currentLabelFrameEnabled ? {
+              frameBgColor: currentLabelFrameBgColor,
+              frameBgOpacity: currentLabelFrameBgOpacity,
+              frameBorderColor: currentLabelFrameBorderColor,
+              frameBorderWidth: currentLabelFrameBorderWidth,
+              frameRadius: currentLabelFrameRadius,
+              framePadding: currentLabelFramePadding,
+            } : {})
           } 
         };
       } else if (activeTool === 'label-eraser') {
@@ -1007,20 +1068,126 @@ export default function App() {
 
                 <div className="pt-4 border-t border-neutral-800">
                   <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Text Color</label>
-                  <div className="flex items-center gap-2">
+                  <div className="flex h-8 bg-black border border-neutral-800 rounded-sm focus-within:ring-1 focus-within:ring-white transition-all overflow-hidden">
                     <input
                       type="color"
                       value={currentLabelColor}
                       onChange={(e) => setCurrentLabelColor(e.target.value)}
-                      className="w-7 h-7 rounded border-0 p-0 cursor-pointer bg-transparent"
+                      className="w-10 h-full p-0 border-0 cursor-pointer seamless-color shrink-0 bg-transparent"
                     />
+                    <div className="w-px h-full bg-neutral-800 shrink-0" />
                     <input
                       type="text"
                       value={currentLabelColor}
                       onChange={(e) => setCurrentLabelColor(e.target.value)}
-                      className="w-full px-2 py-1.5 glass-input text-xs uppercase"
+                      className="flex-1 w-full bg-transparent border-0 px-2 text-[10px] font-bold text-neutral-200 outline-none uppercase tracking-widest"
                     />
                   </div>
+                </div>
+
+                {/* Label Frame / Background */}
+                <div className="pt-4 border-t border-neutral-800 space-y-4">
+                  <label className="flex items-center gap-2 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={currentLabelFrameEnabled}
+                      onChange={(e) => setCurrentLabelFrameEnabled(e.target.checked)}
+                      className="w-4 h-4 accent-white cursor-pointer"
+                    />
+                    <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Label Frame</span>
+                  </label>
+
+                  {currentLabelFrameEnabled && (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Fill Color</label>
+                          <div className="flex h-8 bg-black border border-neutral-800 rounded-sm focus-within:ring-1 focus-within:ring-white transition-all overflow-hidden">
+                            <input
+                              type="color"
+                              value={currentLabelFrameBgColor}
+                              onChange={(e) => setCurrentLabelFrameBgColor(e.target.value)}
+                              className="w-10 h-full p-0 border-0 cursor-pointer seamless-color shrink-0 bg-transparent"
+                            />
+                            <div className="w-px h-full bg-neutral-800 shrink-0" />
+                            <input
+                              type="text"
+                              value={currentLabelFrameBgColor}
+                              onChange={(e) => setCurrentLabelFrameBgColor(e.target.value)}
+                              className="flex-1 w-full bg-transparent border-0 px-2 text-[10px] font-bold text-neutral-200 outline-none uppercase tracking-widest"
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Fill Opacity (%)</label>
+                          <input
+                            type="number"
+                            min="0" max="100"
+                            value={Math.round(currentLabelFrameBgOpacity * 100)}
+                            onChange={(e) => {
+                              const val = Math.max(0, Math.min(100, parseInt(e.target.value) || 0));
+                              setCurrentLabelFrameBgOpacity(val / 100);
+                            }}
+                            className="w-full h-8 px-3 bg-black border border-neutral-800 text-[10px] font-bold text-neutral-200 outline-none focus:border-white focus:ring-1 focus:ring-white transition-all"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Border Color</label>
+                          <div className="flex h-8 bg-black border border-neutral-800 rounded-sm focus-within:ring-1 focus-within:ring-white transition-all overflow-hidden">
+                            <input
+                              type="color"
+                              value={currentLabelFrameBorderColor}
+                              onChange={(e) => setCurrentLabelFrameBorderColor(e.target.value)}
+                              className="w-10 h-full p-0 border-0 cursor-pointer seamless-color shrink-0 bg-transparent"
+                            />
+                            <div className="w-px h-full bg-neutral-800 shrink-0" />
+                            <input
+                              type="text"
+                              value={currentLabelFrameBorderColor}
+                              onChange={(e) => setCurrentLabelFrameBorderColor(e.target.value)}
+                              className="flex-1 w-full bg-transparent border-0 px-2 text-[10px] font-bold text-neutral-200 outline-none uppercase tracking-widest"
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Border Width</label>
+                          <input
+                            type="number"
+                            min="0" max="20"
+                            value={currentLabelFrameBorderWidth}
+                            onChange={(e) => setCurrentLabelFrameBorderWidth(parseInt(e.target.value) || 0)}
+                            className="w-full h-8 px-3 bg-black border border-neutral-800 text-[10px] font-bold text-neutral-200 outline-none focus:border-white focus:ring-1 focus:ring-white transition-all"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Radius (px)</label>
+                          <input
+                            type="number"
+                            min="0" max="100"
+                            value={currentLabelFrameRadius}
+                            onChange={(e) => setCurrentLabelFrameRadius(parseInt(e.target.value) || 0)}
+                            className="w-full h-8 px-3 bg-black border border-neutral-800 text-[10px] font-bold text-neutral-200 outline-none focus:border-white focus:ring-1 focus:ring-white transition-all"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Padding (px)</label>
+                          <input
+                            type="number"
+                            min="0" max="50"
+                            value={currentLabelFramePadding}
+                            onChange={(e) => setCurrentLabelFramePadding(parseInt(e.target.value) || 0)}
+                            className="w-full h-8 px-3 bg-black border border-neutral-800 text-[10px] font-bold text-neutral-200 outline-none focus:border-white focus:ring-1 focus:ring-white transition-all"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

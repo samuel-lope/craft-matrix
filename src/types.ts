@@ -12,6 +12,12 @@ export type LabelData = {
   size: number;
   color: string;
   align?: 'start' | 'center' | 'end';
+  frameBgColor?: string;
+  frameBgOpacity?: number;
+  frameBorderColor?: string;
+  frameBorderWidth?: number;
+  frameRadius?: number;
+  framePadding?: number;
 };
 
 export type CellData = {
