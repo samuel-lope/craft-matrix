@@ -81,6 +81,7 @@ Ao clicar nos botões de exportação no cabeçalho, um **modal de opções** é
   - **Original Size (1×)**: Mantém resolução 1:1 pixel-perfect.
   - **Print (300 DPI)**: Renderiza em alta resolução para impressão.
 - **SVG** (Modal "Export SVG"): Permite definir dimensões personalizadas em pixels (Largura e Altura) para o arquivo SVG exportado. Os campos vêm pré-preenchidos com as dimensões reais calculadas do grid, preservando a proporção original via `viewBox`.
+- **No Grid Lines** (Checkbox): Disponível em ambos os modais, permite exportar a imagem sem as linhas divisórias internas do grid.
 
 > *Nota: O processo converte a tela internamente via Blob para evadir restrições de download seguras do navegador baseadas em Base64.*
 

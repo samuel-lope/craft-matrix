@@ -1330,25 +1330,25 @@ export default function App() {
         title="Save Grid"
       >
         <div className="space-y-4">
-          <p className="text-slate-300 text-sm">
-            You are editing <strong className="text-indigo-400">{currentGridName}</strong>. Do you want to overwrite the existing save or create a new one?
+          <p className="text-neutral-400 text-xs">
+            You are editing <strong className="text-white">{currentGridName}</strong>. Do you want to overwrite the existing save or create a new one?
           </p>
           <div className="flex flex-col gap-3 pt-2">
             <button
               onClick={handleOverwriteGrid}
-              className="btn-primary w-full shadow-[0_0_10px_rgba(139,92,246,0.3)]"
+              className="btn-primary w-full py-2.5 text-center"
             >
               Save (Overwrite)
             </button>
             <button
               onClick={handlePromptSaveAs}
-              className="btn-secondary w-full"
+              className="btn-secondary w-full py-2.5 text-center"
             >
               Save As (New Copy)
             </button>
             <button
               onClick={() => setIsSavePromptModalOpen(false)}
-              className="w-full px-4 py-2 text-sm font-medium text-slate-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors mt-2"
+              className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-neutral-500 hover:text-white transition-colors mt-1"
             >
               Cancel
             </button>
@@ -1364,7 +1364,7 @@ export default function App() {
       >
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Grid Name</label>
+            <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Grid Name</label>
             <input
               type="text"
               autoFocus
@@ -1372,20 +1372,20 @@ export default function App() {
               onChange={(e) => setSaveName(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSaveGrid()}
               placeholder="e.g., My Awesome Matrix"
-              className="glass-input w-full"
+              className="w-full h-8 px-3 bg-black border border-neutral-800 text-[10px] font-bold text-neutral-200 outline-none focus:border-white focus:ring-1 focus:ring-white transition-all"
             />
           </div>
           <div className="flex justify-end gap-3 pt-4">
             <button
               onClick={() => setIsSaveModalOpen(false)}
-              className="px-4 py-2 text-sm font-medium text-slate-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+              className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-neutral-500 hover:text-white transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleSaveGrid}
               disabled={!saveName.trim()}
-              className="btn-primary"
+              className="btn-primary py-2 px-4"
             >
               {currentGridId ? "Save Copy" : "Save"}
             </button>

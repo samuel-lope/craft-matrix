@@ -86,6 +86,7 @@ O cabeçalho possui botões dedicados para exportar toda a montagem visual da gr
   - **Original Size (1×)**: Mantém resolução 1:1 pixel-perfect (`pixelRatio: 1`).
   - **Print (300 DPI)**: Renderiza em alta resolução para impressão (`pixelRatio: 300/96 ≈ 3.125`).
 - **SVG** (Modal "Export SVG"): Permite definir dimensões personalizadas em pixels (Largura e Altura) para o arquivo SVG exportado. Os campos são pré-preenchidos com as dimensões reais calculadas do grid. A lógica altera os atributos `width` e `height` do `<svg>` root via `DOMParser`/`XMLSerializer`, preservando o `viewBox` original para manter a proporção.
+- **No Grid Lines** (Checkbox): Opção presente em ambos os modais de exportação. Quando marcada, as linhas divisórias internas do grid são temporariamente removidas (lineThickness → 0) apenas durante a captura da imagem, sendo restauradas automaticamente após a exportação.
 
 ## Estrutura de Aquivos Chave
 
