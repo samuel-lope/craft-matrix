@@ -246,6 +246,7 @@ export default function App() {
   const [isSvgExportModalOpen, setIsSvgExportModalOpen] = useState(false);
   const [svgExportWidth, setSvgExportWidth] = useState<number>(500);
   const [svgExportHeight, setSvgExportHeight] = useState<number>(500);
+  const [exportNoGridLines, setExportNoGridLines] = useState(false);
 
   const [currentCellBorderWidth, setCurrentCellBorderWidth] = useState<number>(2);
   const [currentCellBorderColor, setCurrentCellBorderColor] = useState<string>('#000000');
@@ -362,48 +363,78 @@ export default function App() {
       return;
     }
 
-    htmlToImage.toPng(gridRef.current, { cacheBust: true, pixelRatio })
-      .then((dataUrl) => {
-        forceDownload(dataUrl, 'image_grid.png');
-      })
-      .catch((err) => {
-        console.error('Oops, something went wrong!', err);
-      });
+    const originalLineThickness = gridState.lineThickness;
+    const doCapture = () => {
+      htmlToImage.toPng(gridRef.current!, { cacheBust: true, pixelRatio })
+        .then((dataUrl) => {
+          forceDownload(dataUrl, 'image_grid.png');
+        })
+        .catch((err) => {
+          console.error('Oops, something went wrong!', err);
+        })
+        .finally(() => {
+          if (exportNoGridLines) {
+            setGridState(prev => ({ ...prev, lineThickness: originalLineThickness }));
+          }
+        });
+    };
+
+    if (exportNoGridLines) {
+      setGridState(prev => ({ ...prev, lineThickness: 0 }));
+      requestAnimationFrame(() => requestAnimationFrame(doCapture));
+    } else {
+      doCapture();
+    }
     setIsPngExportModalOpen(false);
-  }, [gridRef]);
+  }, [gridRef, gridState.lineThickness, exportNoGridLines]);
 
   const handleExportSvg = useCallback(() => {
     if (gridRef.current === null) {
       return;
     }
 
-    htmlToImage.toSvg(gridRef.current, { cacheBust: true })
-      .then((dataUrl) => {
-        // Parse the SVG data URL, update width/height, preserve viewBox
-        const svgContent = decodeURIComponent(dataUrl.split(',')[1]);
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(svgContent, 'image/svg+xml');
-        const svgEl = doc.querySelector('svg');
-        if (svgEl) {
-          // Set viewBox to original dimensions if not already present
-          if (!svgEl.getAttribute('viewBox')) {
-            const origW = svgEl.getAttribute('width') || String(svgExportWidth);
-            const origH = svgEl.getAttribute('height') || String(svgExportHeight);
-            svgEl.setAttribute('viewBox', `0 0 ${parseFloat(origW)} ${parseFloat(origH)}`);
+    const originalLineThickness = gridState.lineThickness;
+    const doCapture = () => {
+      htmlToImage.toSvg(gridRef.current!, { cacheBust: true })
+        .then((dataUrl) => {
+          // Parse the SVG data URL, update width/height, preserve viewBox
+          const svgContent = decodeURIComponent(dataUrl.split(',')[1]);
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(svgContent, 'image/svg+xml');
+          const svgEl = doc.querySelector('svg');
+          if (svgEl) {
+            // Set viewBox to original dimensions if not already present
+            if (!svgEl.getAttribute('viewBox')) {
+              const origW = svgEl.getAttribute('width') || String(svgExportWidth);
+              const origH = svgEl.getAttribute('height') || String(svgExportHeight);
+              svgEl.setAttribute('viewBox', `0 0 ${parseFloat(origW)} ${parseFloat(origH)}`);
+            }
+            svgEl.setAttribute('width', String(svgExportWidth));
+            svgEl.setAttribute('height', String(svgExportHeight));
           }
-          svgEl.setAttribute('width', String(svgExportWidth));
-          svgEl.setAttribute('height', String(svgExportHeight));
-        }
-        const serializer = new XMLSerializer();
-        const updatedSvg = serializer.serializeToString(doc);
-        const updatedDataUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(updatedSvg);
-        forceDownload(updatedDataUrl, 'image_grid.svg');
-      })
-      .catch((err) => {
-        console.error('Oops, something went wrong with SVG export!', err);
-      });
+          const serializer = new XMLSerializer();
+          const updatedSvg = serializer.serializeToString(doc);
+          const updatedDataUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(updatedSvg);
+          forceDownload(updatedDataUrl, 'image_grid.svg');
+        })
+        .catch((err) => {
+          console.error('Oops, something went wrong with SVG export!', err);
+        })
+        .finally(() => {
+          if (exportNoGridLines) {
+            setGridState(prev => ({ ...prev, lineThickness: originalLineThickness }));
+          }
+        });
+    };
+
+    if (exportNoGridLines) {
+      setGridState(prev => ({ ...prev, lineThickness: 0 }));
+      requestAnimationFrame(() => requestAnimationFrame(doCapture));
+    } else {
+      doCapture();
+    }
     setIsSvgExportModalOpen(false);
-  }, [gridRef, svgExportWidth, svgExportHeight]);
+  }, [gridRef, svgExportWidth, svgExportHeight, gridState.lineThickness, exportNoGridLines]);
 
   const handleGridChange = (key: keyof GridState, value: any) => {
     setGridState((prev) => ({ ...prev, [key]: value }));
@@ -1370,6 +1401,15 @@ export default function App() {
       >
         <div className="space-y-3">
           <p className="text-neutral-400 text-xs">Escolha o tamanho da imagem PNG para exportação.</p>
+          <label className="flex items-center gap-2 cursor-pointer select-none pt-1">
+            <input
+              type="checkbox"
+              checked={exportNoGridLines}
+              onChange={(e) => setExportNoGridLines(e.target.checked)}
+              className="w-4 h-4 accent-white cursor-pointer"
+            />
+            <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">No Grid Lines</span>
+          </label>
           <div className="flex flex-col gap-3 pt-2">
             <button
               onClick={() => handleDownload(0.5)}
@@ -1401,6 +1441,15 @@ export default function App() {
       >
         <div className="space-y-4">
           <p className="text-neutral-400 text-xs">Defina as dimensões do arquivo SVG exportado (em pixels).</p>
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={exportNoGridLines}
+              onChange={(e) => setExportNoGridLines(e.target.checked)}
+              className="w-4 h-4 accent-white cursor-pointer"
+            />
+            <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">No Grid Lines</span>
+          </label>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Largura (px)</label>
