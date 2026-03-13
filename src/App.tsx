@@ -241,6 +241,12 @@ export default function App() {
   const [currentGridId, setCurrentGridId] = useState<string | null>(null);
   const [currentGridName, setCurrentGridName] = useState<string>('');
 
+  // Export modal states
+  const [isPngExportModalOpen, setIsPngExportModalOpen] = useState(false);
+  const [isSvgExportModalOpen, setIsSvgExportModalOpen] = useState(false);
+  const [svgExportWidth, setSvgExportWidth] = useState<number>(500);
+  const [svgExportHeight, setSvgExportHeight] = useState<number>(500);
+
   const [currentCellBorderWidth, setCurrentCellBorderWidth] = useState<number>(2);
   const [currentCellBorderColor, setCurrentCellBorderColor] = useState<string>('#000000');
   const [currentCellBorderAlignment, setCurrentCellBorderAlignment] = useState<BorderAlignment>('inner');
@@ -342,18 +348,28 @@ export default function App() {
       });
   };
 
-  const handleDownload = useCallback(() => {
+  const getGridPixelDimensions = useCallback(() => {
+    const { rows, cols, cellSize, lineThickness, borderThickness, externalMargin } = gridState;
+    const innerWidth = cols * cellSize + (cols - 1) * lineThickness;
+    const innerHeight = rows * cellSize + (rows - 1) * lineThickness;
+    const totalWidth = innerWidth + borderThickness * 2 + (externalMargin || 0) * 2;
+    const totalHeight = innerHeight + borderThickness * 2 + (externalMargin || 0) * 2;
+    return { width: totalWidth, height: totalHeight };
+  }, [gridState]);
+
+  const handleDownload = useCallback((pixelRatio: number) => {
     if (gridRef.current === null) {
       return;
     }
 
-    htmlToImage.toPng(gridRef.current, { cacheBust: true })
+    htmlToImage.toPng(gridRef.current, { cacheBust: true, pixelRatio })
       .then((dataUrl) => {
         forceDownload(dataUrl, 'image_grid.png');
       })
       .catch((err) => {
         console.error('Oops, something went wrong!', err);
       });
+    setIsPngExportModalOpen(false);
   }, [gridRef]);
 
   const handleExportSvg = useCallback(() => {
@@ -363,12 +379,31 @@ export default function App() {
 
     htmlToImage.toSvg(gridRef.current, { cacheBust: true })
       .then((dataUrl) => {
-        forceDownload(dataUrl, 'image_grid.svg');
+        // Parse the SVG data URL, update width/height, preserve viewBox
+        const svgContent = decodeURIComponent(dataUrl.split(',')[1]);
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(svgContent, 'image/svg+xml');
+        const svgEl = doc.querySelector('svg');
+        if (svgEl) {
+          // Set viewBox to original dimensions if not already present
+          if (!svgEl.getAttribute('viewBox')) {
+            const origW = svgEl.getAttribute('width') || String(svgExportWidth);
+            const origH = svgEl.getAttribute('height') || String(svgExportHeight);
+            svgEl.setAttribute('viewBox', `0 0 ${parseFloat(origW)} ${parseFloat(origH)}`);
+          }
+          svgEl.setAttribute('width', String(svgExportWidth));
+          svgEl.setAttribute('height', String(svgExportHeight));
+        }
+        const serializer = new XMLSerializer();
+        const updatedSvg = serializer.serializeToString(doc);
+        const updatedDataUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(updatedSvg);
+        forceDownload(updatedDataUrl, 'image_grid.svg');
       })
       .catch((err) => {
         console.error('Oops, something went wrong with SVG export!', err);
       });
-  }, [gridRef]);
+    setIsSvgExportModalOpen(false);
+  }, [gridRef, svgExportWidth, svgExportHeight]);
 
   const handleGridChange = (key: keyof GridState, value: any) => {
     setGridState((prev) => ({ ...prev, [key]: value }));
@@ -1129,14 +1164,19 @@ export default function App() {
               Save Grid
             </button>
             <button
-              onClick={handleDownload}
+              onClick={() => setIsPngExportModalOpen(true)}
               className="flex items-center gap-2 btn-primary py-2 px-4 text-sm"
             >
               <Download className="w-4 h-4" />
               PNG
             </button>
             <button
-              onClick={handleExportSvg}
+              onClick={() => {
+                const dims = getGridPixelDimensions();
+                setSvgExportWidth(dims.width);
+                setSvgExportHeight(dims.height);
+                setIsSvgExportModalOpen(true);
+              }}
               className="flex items-center gap-2 btn-primary py-2 px-4 text-sm"
             >
               <Download className="w-4 h-4" />
@@ -1317,6 +1357,85 @@ export default function App() {
               className="btn-primary"
             >
               {currentGridId ? "Save Copy" : "Save"}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* PNG Export Modal */}
+      <Modal
+        isOpen={isPngExportModalOpen}
+        onClose={() => setIsPngExportModalOpen(false)}
+        title="Export PNG"
+      >
+        <div className="space-y-3">
+          <p className="text-neutral-400 text-xs">Escolha o tamanho da imagem PNG para exportação.</p>
+          <div className="flex flex-col gap-3 pt-2">
+            <button
+              onClick={() => handleDownload(0.5)}
+              className="btn-secondary w-full py-2.5 text-center"
+            >
+              Small (0.5×)
+            </button>
+            <button
+              onClick={() => handleDownload(1)}
+              className="btn-primary w-full py-2.5 text-center"
+            >
+              Original Size (1×)
+            </button>
+            <button
+              onClick={() => handleDownload(300 / 96)}
+              className="btn-primary w-full py-2.5 text-center"
+            >
+              Print (300 DPI)
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* SVG Export Modal */}
+      <Modal
+        isOpen={isSvgExportModalOpen}
+        onClose={() => setIsSvgExportModalOpen(false)}
+        title="Export SVG"
+      >
+        <div className="space-y-4">
+          <p className="text-neutral-400 text-xs">Defina as dimensões do arquivo SVG exportado (em pixels).</p>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Largura (px)</label>
+              <input
+                type="number"
+                min="1"
+                value={svgExportWidth}
+                onChange={(e) => setSvgExportWidth(parseInt(e.target.value) || 1)}
+                className="w-full h-8 px-3 bg-black border border-neutral-800 text-[10px] font-bold text-neutral-200 outline-none focus:border-white focus:ring-1 focus:ring-white transition-all"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Altura (px)</label>
+              <input
+                type="number"
+                min="1"
+                value={svgExportHeight}
+                onChange={(e) => setSvgExportHeight(parseInt(e.target.value) || 1)}
+                className="w-full h-8 px-3 bg-black border border-neutral-800 text-[10px] font-bold text-neutral-200 outline-none focus:border-white focus:ring-1 focus:ring-white transition-all"
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-3 pt-4">
+            <button
+              onClick={() => setIsSvgExportModalOpen(false)}
+              className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-neutral-500 hover:text-white transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleExportSvg}
+              className="btn-primary py-2 px-4 flex items-center gap-2"
+            >
+              <Download className="w-4 h-4" />
+              Export SVG
             </button>
           </div>
         </div>
