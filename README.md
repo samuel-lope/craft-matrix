@@ -101,4 +101,4 @@ Ao clicar nos botões de exportação no cabeçalho, um **modal de opções** é
 3. Acesse a aplicação no seu navegador padrão usando a porta indicada pelo console (ex: `http://localhost:3000`). Para buildar, aplique `npm run build`.
 
 ## 🎨 Estilo e Design
-Este projeto foca fortemente numa estética visual baseada no **Dark Mode** e **Glassmorphism**, com paleta construída sob tons de violeta, rosa e preto acompanhada de transparências configuradas puramente pelo TailwindCSS.
+Este projeto adota a estética **Technical Minimalism** com **Dark Mode** puro, utilizando uma paleta construída sobre preto (#000000) e a escala de cinza `neutral` do Tailwind CSS, com acentos em branco para alto contraste e elementos ativos.
