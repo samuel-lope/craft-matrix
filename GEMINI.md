@@ -79,9 +79,13 @@ As ferramentas operam sob a lógica do "clique na célula". A ferramenta selecio
 - **Manage Saved Grids**: Fica num modal dedicado (Grid Manager) garantindo o salvamento progressivo e versionado da grade no `LocalStorage` debaixo de uma chave de identificador da composição do estado, suportando as funções Overwrite, Save As New, e Restore.
 
 ### 4. Exportação do Trabalho
-O cabecealho possui botões práticos para exportar toda a montagem visual da grade usando a lib `html-to-image`, que passa por uma conversão em Blob para burlar restrições de segurança do navegador que impedem downloads automáticos de Base64 em arquivos extensos:
-- **PNG**: Realiza download de imagem transparente rasterizada (`image_grid.png`).
-- **SVG**: Realiza download vetorizado da grade em formato editável (`image_grid.svg`).
+O cabeçalho possui botões dedicados para exportar toda a montagem visual da grade usando a lib `html-to-image`, que passa por uma conversão em Blob para burlar restrições de segurança do navegador que impedem downloads automáticos de Base64 em arquivos extensos. Ao clicar nos botões de exportação, um **modal de opções** é exibido antes do download:
+
+- **PNG** (Modal "Export PNG"): Oferece três opções de tamanho/resolução via `pixelRatio` do `html-to-image`:
+  - **Small (0.5×)**: Escala reduzida a 50% da dimensão original (`pixelRatio: 0.5`).
+  - **Original Size (1×)**: Mantém resolução 1:1 pixel-perfect (`pixelRatio: 1`).
+  - **Print (300 DPI)**: Renderiza em alta resolução para impressão (`pixelRatio: 300/96 ≈ 3.125`).
+- **SVG** (Modal "Export SVG"): Permite definir dimensões personalizadas em pixels (Largura e Altura) para o arquivo SVG exportado. Os campos são pré-preenchidos com as dimensões reais calculadas do grid. A lógica altera os atributos `width` e `height` do `<svg>` root via `DOMParser`/`XMLSerializer`, preservando o `viewBox` original para manter a proporção.
 
 ## Estrutura de Aquivos Chave
 

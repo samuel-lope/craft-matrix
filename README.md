@@ -74,8 +74,14 @@ Abaixo está o mapeamento descritivo em formato JSON que detalha os atributos e 
 - **Grid Manager (Manage Saved Grids)**: Janela para salvamento progressivo e versionado da grade no `LocalStorage`. Garante a recuperação do estado, suportando operações flexíveis como Sobrescrever (Overwrite), Salvar como Novo (Save As New) e Restaurar (Restore).
 
 ### 📤 Exportação
-- **PNG**: Exporta em formato de imagem rasterizada com fundo transparente (`image_grid.png`).
-- **SVG**: Exporta o painel de forma vetorizada flexível (`image_grid.svg`).
+Ao clicar nos botões de exportação no cabeçalho, um **modal de opções** é exibido antes do download:
+
+- **PNG** (Modal "Export PNG"): Oferece três opções de tamanho/resolução:
+  - **Small (0.5×)**: Escala reduzida a 50% da dimensão original.
+  - **Original Size (1×)**: Mantém resolução 1:1 pixel-perfect.
+  - **Print (300 DPI)**: Renderiza em alta resolução para impressão.
+- **SVG** (Modal "Export SVG"): Permite definir dimensões personalizadas em pixels (Largura e Altura) para o arquivo SVG exportado. Os campos vêm pré-preenchidos com as dimensões reais calculadas do grid, preservando a proporção original via `viewBox`.
+
 > *Nota: O processo converte a tela internamente via Blob para evadir restrições de download seguras do navegador baseadas em Base64.*
 
 ## 💻 Como Rodar o Projeto
