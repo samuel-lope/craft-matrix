@@ -12,6 +12,7 @@ A aplicação trabalha diretamente no navegador, construída com **React**, **Ty
 - **Linhas e Bordas**: Controle de espessura e cor das linhas divisórias e da moldura externa do grid.
 - **Margens Externas**: Espaçamento configurável fora do grid com suporte a cor e opacidade de fundo.
 - **Fundo Global**: Definição de cor e opacidade do fundo das células, mantendo linhas/bordas perfeitamente visíveis em qualquer nível de transparência.
+- **Workspace Background**: Personalização da área de fundo do workspace com cor sólida e textura (URL ou código SVG).
 
 #### 📄 Referência de Parâmetros em JSON (Grid Elements)
 Abaixo está o mapeamento descritivo em formato JSON que detalha os atributos e elementos configuráveis detectados na aplicação:
@@ -40,6 +41,10 @@ Abaixo está o mapeamento descritivo em formato JSON que detalha os atributos e 
     "innerBackground": {
       "innerBgColor": "Cor de fundo global aplicada dentro do grid",
       "innerBgOpacity": "Opacidade global do fundo interno do grid"
+    },
+    "workspace": {
+      "workspaceBgColor": "Cor de fundo do workspace (área externa ao grid)",
+      "workspaceBgImageUrl": "URL ou código SVG da textura de fundo do workspace"
     }
   },
   "cellData": {
@@ -50,7 +55,14 @@ Abaixo está o mapeamento descritivo em formato JSON que detalha os atributos e 
       "text": "Conteúdo de texto a ser renderizado na célula",
       "font": "Família de fonte tipográfica",
       "size": "Tamanho da fonte em pixels",
-      "color": "Cor do texto em valor Hex"
+      "color": "Cor do texto em valor Hex",
+      "align": "Alinhamento do texto ('start', 'center' ou 'end')",
+      "frameBgColor": "Cor de fundo do quadro do texto",
+      "frameBgOpacity": "Opacidade do fundo do quadro do texto",
+      "frameBorderColor": "Cor da borda do quadro do texto",
+      "frameBorderWidth": "Espessura da borda do quadro do texto",
+      "frameRadius": "Raio da quina do quadro do texto",
+      "framePadding": "Espaçamento interno do quadro do texto"
     },
     "borders": {
       "borderTop": "Configuração da borda superior (largura, cor, alinhamento)",
@@ -65,13 +77,13 @@ Abaixo está o mapeamento descritivo em formato JSON que detalha os atributos e 
 ### 🛠️ Ferramentas de Interação (Interação na Célula)
 - **Background Tools**: Pinte com cor sólida (`bg-color`), insira um código SVG ajustado em 100% sob a célula (`bg-svg`) ou apague a camada de fundo (`bg-eraser`).
 - **Item Tools**: Permite inserir um código SVG flutuando acima do background (`item-svg`) ou apagá-lo da célula (`item-eraser`).
-- **Label Tools**: Permite inserir texto (`label`) perfeitamente centralizado em tipografia editável (fonte, tamanho e cor) que flutua acima de todos os outros elementos do grid, ou apagá-lo (`label-eraser`).
+- **Label Tools**: Permite inserir texto (`label`) com tipografia editável (fonte, tamanho, cor e alinhamento). Inclui suporte a **moldura (frame)** configurável com cor de fundo, opacidade, borda, raio e preenchimento. Também possui apagador (`label-eraser`).
 - **Cell Border Tools**: Aplique (`cell-border`) ou remova (`cell-border-eraser`) bordas de células específicas, escolhendo o lado afetado (Top, Right, Bottom, Left), a espessura, a cor e o comportamento de alinhamento (`inner`, `center`, `outer`).
-- **General Tools**: Ferramenta `Pointer` passiva, além da ferramenta `Eraser Area` para apagar todo o conteúdo apenas da camada atualmente selecionada em toda a grade, e um botão extra de limpeza completa do grid.
+- **General Tools**: Ferramenta `Pointer` passiva, além da ferramenta `Eraser Area` para apagar todo o conteúdo de uma célula específica, e um botão extra de limpeza completa do grid.
 
 ### 💾 Gerenciamento (Managers)
-- **Asset Manager (Manage Assets)**: Janela dedicada para salvar strings de código hexagonal (cores) e código SVG limpo para uso posterior (fundos ou itens). Fica armazenado na sessão.
-- **Grid Manager (Manage Saved Grids)**: Janela para salvamento progressivo e versionado da grade no `LocalStorage`. Garante a recuperação do estado, suportando operações flexíveis como Sobrescrever (Overwrite), Salvar como Novo (Save As New) e Restaurar (Restore).
+- **Asset Manager (Manage Assets)**: Janela dedicada para salvar strings de código hexagonal (cores) e código SVG limpo para uso posterior (fundos ou itens). Suporta adição, edição e exclusão.
+- **Grid Manager (Manage Saved Grids)**: Janela para salvamento progressivo e versionado da grade no `LocalStorage`. Permite Sobrescrever (Overwrite), Salvar como Novo (Save As New), Renomear e Excluir.
 
 ### 📤 Exportação
 Ao clicar nos botões de exportação no cabeçalho, um **modal de opções** é exibido antes do download:
@@ -102,4 +114,4 @@ Ao clicar nos botões de exportação no cabeçalho, um **modal de opções** é
 3. Acesse a aplicação no seu navegador padrão usando a porta indicada pelo console (ex: `http://localhost:3000`). Para buildar, aplique `npm run build`.
 
 ## 🎨 Estilo e Design
-Este projeto adota a estética **Technical Minimalism** com **Dark Mode** puro, utilizando uma paleta construída sobre preto (#000000) e a escala de cinza `neutral` do Tailwind CSS, com acentos em branco para alto contraste e elementos ativos.
+Este projeto adota a estética **Technical Minimalism** com **Dark Mode** puro, utilizando uma paleta construída sobre preto (#000000) e a escala de cinza `neutral` do Tailwind CSS, com acentos em branco para alto contraste e elementos ativos. Usa ícones discretos do **Lucide React** e uma tipografia limpa.
