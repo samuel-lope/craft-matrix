@@ -86,7 +86,7 @@ As ferramentas operam sob a lógica do "clique na célula". A ferramenta selecio
 - **General Tools**: Ferramenta `Pointer` (não faz nada na célula) e ferramenta para apagar todo o conteúdo de uma célula (`Eraser Area`). Há também botão para limpar a grade completa.
 
 ### 3. Gerenciamento (Managers)
-- **Manage Assets**: Fica num modal dedicado (Asset Manager) para salvar strings de código hexagonal (cores), código limpo SVG para fundos, e código limpo SVG para itens. Suporta adição, edição, exclusão e visualização prévia.
+- **Manage Assets**: Fica num modal dedicado (Asset Manager) para salvar strings de código hexagonal (cores), código limpo SVG para fundos, e código limpo SVG para itens. Suporta adição, edição, exclusão e visualização prévia. Inclui a ferramenta **Detectar Cor**, que utiliza a EyeDropper API para capturar cores diretamente da tela do usuário.
 - **Manage Saved Grids**: Fica num modal dedicado (Grid Manager) garantindo o salvamento progressivo e versionado da grade no `LocalStorage`. Suporta as funções Overwrite, Save As New, Restore (Load), Rename e Delete.
 
 ### 4. Exportação do Trabalho

@@ -1,6 +1,18 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Plus, Trash2, Edit2, Save, X } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Edit2, Save, X, Pipette } from 'lucide-react';
 import { SavedAsset } from './types';
+
+// Add EyeDropper type definition for TypeScript if not already available
+declare global {
+  interface EyeDropper {
+    open(): Promise<{ sRGBHex: string }>;
+  }
+  interface Window {
+    EyeDropper: {
+      new (): EyeDropper;
+    };
+  }
+}
 
 type AssetManagerProps = {
   onClose: () => void;
@@ -50,6 +62,30 @@ export default function AssetManager({
     };
     setActiveAssets([...getActiveAssets(), newAsset]);
     handleEdit(newAsset);
+  };
+
+  const handleDetectColor = async () => {
+    if (!('EyeDropper' in window)) {
+      alert('Seu navegador não suporta a função de detectar cores (EyeDropper API).');
+      return;
+    }
+
+    try {
+      const eyeDropper = new window.EyeDropper();
+      const result = await eyeDropper.open();
+      
+      const newColor: SavedAsset = {
+        id: Date.now().toString(),
+        name: `Detected Color ${savedColors.length + 1}`,
+        value: result.sRGBHex
+      };
+      
+      setSavedColors([...savedColors, newColor]);
+      setActiveTab('colors');
+      handleEdit(newColor);
+    } catch (e) {
+      console.log('EyeDropper closed or failed', e);
+    }
   };
 
   const handleEdit = (asset: SavedAsset) => {
@@ -109,13 +145,24 @@ export default function AssetManager({
           <div className="flex-1 space-y-6">
             <div className="flex items-center justify-between pb-4 border-b border-neutral-800">
               <h2 className="text-xl font-bold capitalize text-neutral-200 tracking-tight">{activeTab.replace('-', ' ')}</h2>
-              <button
-                onClick={handleAdd}
-                className="btn-primary flex items-center gap-2 py-2 px-4"
-              >
-                <Plus className="w-4 h-4" />
-                Add New
-              </button>
+              <div className="flex items-center gap-3">
+                {activeTab === 'colors' && 'EyeDropper' in window && (
+                  <button
+                    onClick={handleDetectColor}
+                    className="btn-secondary flex items-center gap-2 py-2 px-4 shadow-none"
+                  >
+                    <Pipette className="w-4 h-4" />
+                    Detectar Cor
+                  </button>
+                )}
+                <button
+                  onClick={handleAdd}
+                  className="btn-primary flex items-center gap-2 py-2 px-4"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add New
+                </button>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
