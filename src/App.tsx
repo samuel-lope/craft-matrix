@@ -252,13 +252,17 @@ const generateSimplifiedSvg = (state: GridState, noGridLines: boolean) => {
   }
 
   // 4. Cells Background Colors
+  // Quando não há linha de separação, adicionamos uma micro constância de 0.5px 
+  // em largura e altura para evitar vazamento via anti-aliasing do visualizador de arquivos.
+  const cellRenderSize = effectiveLineThickness === 0 ? cellSize + 0.5 : cellSize;
+
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
       const cell = cells[`${r},${c}`];
       if (cell && cell.bgType === 'color' && cell.bgValue) {
         const cx = gridStartX + c * cellSize + c * effectiveLineThickness;
         const cy = gridStartY + r * cellSize + r * effectiveLineThickness;
-        elements += `  <rect x="${cx}" y="${cy}" width="${cellSize}" height="${cellSize}" fill="${cell.bgValue}" />\n`;
+        elements += `  <rect x="${cx}" y="${cy}" width="${cellRenderSize}" height="${cellRenderSize}" fill="${cell.bgValue}" />\n`;
       }
     }
   }
@@ -275,7 +279,7 @@ const generateSimplifiedSvg = (state: GridState, noGridLines: boolean) => {
     }
   }
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${totalWidth} ${totalHeight}" width="${totalWidth}" height="${totalHeight}">\n${elements}</svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges" viewBox="0 0 ${totalWidth} ${totalHeight}" width="${totalWidth}" height="${totalHeight}">\n${elements}</svg>`;
 };
 
 export default function App() {
