@@ -216,6 +216,68 @@ const MemoizedCell = React.memo(({ rowIndex, colIndex, cellData, cellSize, lineT
   );
 });
 
+const generateSimplifiedSvg = (state: GridState, noGridLines: boolean) => {
+  const { 
+    rows, cols, cellSize, lineThickness, borderThickness, externalMargin = 0, 
+    externalMarginColor = '#ffffff', externalMarginOpacity = 0, 
+    innerBgColor = '#ffffff', innerBgOpacity = 1, lineColor, borderColor, cells 
+  } = state;
+  const effectiveLineThickness = noGridLines ? 0 : lineThickness;
+
+  const innerWidth = cols * cellSize + (cols - 1) * effectiveLineThickness;
+  const innerHeight = rows * cellSize + (rows - 1) * effectiveLineThickness;
+  const totalWidth = innerWidth + borderThickness * 2 + externalMargin * 2;
+  const totalHeight = innerHeight + borderThickness * 2 + externalMargin * 2;
+
+  let elements = '';
+
+  // 1. External Margin
+  if (externalMargin > 0 && externalMarginOpacity > 0) {
+    const halfM = externalMargin / 2;
+    elements += `  <rect x="${halfM}" y="${halfM}" width="${totalWidth - externalMargin}" height="${totalHeight - externalMargin}" fill="none" stroke="${externalMarginColor}" stroke-width="${externalMargin}" stroke-opacity="${externalMarginOpacity}" />\n`;
+  }
+
+  const gridStartX = externalMargin + borderThickness;
+  const gridStartY = externalMargin + borderThickness;
+
+  // 2. Outer Border
+  if (borderThickness > 0) {
+    const halfB = borderThickness / 2;
+    elements += `  <rect x="${externalMargin + halfB}" y="${externalMargin + halfB}" width="${totalWidth - externalMargin*2 - borderThickness}" height="${totalHeight - externalMargin*2 - borderThickness}" fill="none" stroke="${borderColor}" stroke-width="${borderThickness}" />\n`;
+  }
+
+  // 3. Inner Background
+  if (innerBgOpacity > 0) {
+    elements += `  <rect x="${gridStartX}" y="${gridStartY}" width="${innerWidth}" height="${innerHeight}" fill="${innerBgColor}" fill-opacity="${innerBgOpacity}" />\n`;
+  }
+
+  // 4. Cells Background Colors
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const cell = cells[`${r},${c}`];
+      if (cell && cell.bgType === 'color' && cell.bgValue) {
+        const cx = gridStartX + c * cellSize + c * effectiveLineThickness;
+        const cy = gridStartY + r * cellSize + r * effectiveLineThickness;
+        elements += `  <rect x="${cx}" y="${cy}" width="${cellSize}" height="${cellSize}" fill="${cell.bgValue}" />\n`;
+      }
+    }
+  }
+
+  // 5. Grid Lines
+  if (effectiveLineThickness > 0) {
+    for (let r = 1; r < rows; r++) {
+       const ly = gridStartY + r * cellSize + (r - 1) * effectiveLineThickness;
+       elements += `  <rect x="${gridStartX}" y="${ly}" width="${innerWidth}" height="${effectiveLineThickness}" fill="${lineColor}" />\n`;
+    }
+    for (let c = 1; c < cols; c++) {
+       const lx = gridStartX + c * cellSize + (c - 1) * effectiveLineThickness;
+       elements += `  <rect x="${lx}" y="${gridStartY}" width="${effectiveLineThickness}" height="${innerHeight}" fill="${lineColor}" />\n`;
+    }
+  }
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${totalWidth} ${totalHeight}" width="${totalWidth}" height="${totalHeight}">\n${elements}</svg>`;
+};
+
 export default function App() {
   const [gridState, setGridState] = useState<GridState>({
     rows: 10,
@@ -279,6 +341,7 @@ export default function App() {
   const [svgExportWidth, setSvgExportWidth] = useState<number>(500);
   const [svgExportHeight, setSvgExportHeight] = useState<number>(500);
   const [exportNoGridLines, setExportNoGridLines] = useState(false);
+  const [exportSimplifiedSvg, setExportSimplifiedSvg] = useState(false);
 
   const [currentCellBorderWidth, setCurrentCellBorderWidth] = useState<number>(2);
   const [currentCellBorderColor, setCurrentCellBorderColor] = useState<string>('#000000');
@@ -439,6 +502,23 @@ export default function App() {
       return;
     }
 
+    if (exportSimplifiedSvg) {
+      const svgString = generateSimplifiedSvg(gridState, exportNoGridLines);
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(svgString, 'image/svg+xml');
+      const svgEl = doc.querySelector('svg');
+      if (svgEl) {
+          svgEl.setAttribute('width', String(svgExportWidth));
+          svgEl.setAttribute('height', String(svgExportHeight));
+      }
+      const serializer = new XMLSerializer();
+      const updatedSvg = serializer.serializeToString(doc);
+      const dataUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(updatedSvg);
+      forceDownload(dataUrl, 'simplified_grid.svg');
+      setIsSvgExportModalOpen(false);
+      return;
+    }
+
     const originalLineThickness = gridState.lineThickness;
     const doCapture = () => {
       htmlToImage.toSvg(gridRef.current!, { cacheBust: true })
@@ -480,7 +560,7 @@ export default function App() {
       doCapture();
     }
     setIsSvgExportModalOpen(false);
-  }, [gridRef, svgExportWidth, svgExportHeight, gridState.lineThickness, exportNoGridLines]);
+  }, [gridRef, svgExportWidth, svgExportHeight, gridState, exportNoGridLines, exportSimplifiedSvg]);
 
   const handleGridChange = (key: keyof GridState, value: any) => {
     setGridState((prev) => ({ ...prev, [key]: value }));
@@ -1616,6 +1696,15 @@ export default function App() {
               className="w-4 h-4 accent-white cursor-pointer"
             />
             <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">No Grid Lines</span>
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={exportSimplifiedSvg}
+              onChange={(e) => setExportSimplifiedSvg(e.target.checked)}
+              className="w-4 h-4 accent-white cursor-pointer"
+            />
+            <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Simplified SVG (Fast, Backgrounds only)</span>
           </label>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
