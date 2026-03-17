@@ -92,8 +92,9 @@ Ao clicar nos botões de exportação no cabeçalho, um **modal de opções** é
   - **Small (0.5×)**: Escala reduzida a 50% da dimensão original.
   - **Original Size (1×)**: Mantém resolução 1:1 pixel-perfect.
   - **Print (300 DPI)**: Renderiza em alta resolução para impressão.
-- **SVG** (Modal "Export SVG"): Permite definir dimensões personalizadas em pixels (Largura e Altura) para o arquivo SVG exportado. Os campos vêm pré-preenchidos com as dimensões reais calculadas do grid, preservando a proporção original via `viewBox`.
-- **No Grid Lines** (Checkbox): Disponível em ambos os modais, permite exportar a imagem sem as linhas divisórias internas do grid.
+- **SVG** (Modal "Export SVG"): Permite definir dimensões personalizadas em pixels (Largura e Altura) para o arquivo SVG exportado. Os campos vêm pré-preenchidos com as dimensões reais calculadas do grid, preservando a proporção original via `viewBox`. Há uma opção engatada dedicada ("Simplified SVG"):
+  - **Simplified SVG (Fast, Backgrounds only)**: Um checkbox que contorna o processador primário (da DOM) e desenha nativamente um arquivo XML limpo estruturado com `shape-rendering="crispEdges"` contendo exatamente as larguras de linhas aplicadas. Ele injeta `overlap` sub-pixel para neutralizar qualquer defeito de margem branca/anti-aliasing, sendo perfeito para matrizes sólidas de fundos ou pixel-art puros sem perdas em Base64.
+- **No Grid Lines** (Checkbox): Disponível em ambos os modais, permite exportar a imagem sem as linhas divisórias internas (escondendo a grid invisível num SVG simplificado, ou apagando-nas em um DOM capture).
 
 > *Nota: O processo converte a tela internamente via Blob para evadir restrições de download seguras do navegador baseadas em Base64.*
 

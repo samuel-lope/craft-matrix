@@ -96,8 +96,9 @@ O cabeçalho possui botões dedicados para exportar toda a montagem visual da gr
   - **Small (0.5×)**: Escala reduzida a 50% da dimensão original (`pixelRatio: 0.5`).
   - **Original Size (1×)**: Mantém resolução 1:1 pixel-perfect (`pixelRatio: 1`).
   - **Print (300 DPI)**: Renderiza em alta resolução para impressão (`pixelRatio: 300/96 ≈ 3.125`).
-- **SVG** (Modal "Export SVG"): Permite definir dimensões personalizadas em pixels (Largura e Altura) para o arquivo SVG exportado. Os campos são pré-preenchidos com as dimensões reais calculadas do grid. A lógica altera os atributos `width` e `height` do `<svg>` root via `DOMParser`/`XMLSerializer`, preservando o `viewBox` original para manter a proporção.
-- **No Grid Lines** (Checkbox): Opção presente em ambos os modais de exportação. Quando marcada, as linhas divisórias internas do grid são temporariamente removidas (lineThickness → 0) apenas durante a captura da imagem, sendo restauradas automaticamente após a exportação.
+- **SVG** (Modal "Export SVG"): Permite definir dimensões personalizadas em pixels (Largura e Altura) para o arquivo SVG exportado. Os campos são pré-preenchidos com as dimensões reais calculadas do grid. A lógica original altera via `DOMParser`, mas agora o modal dispõe de uma nova função nativa pura ativada por checkbox:
+  - **Simplified SVG (Fast, Backgrounds only)**: Desativa a leitura de imagem externa gerando um arquivo de código geométrico leve construído matematicamente pelo React. Possui overlaps sub-pixel integrados e atributos `shape-rendering="crispEdges"` para barrar perdas e clareiras devidas a comportamentos de anti-aliasing.
+- **No Grid Lines** (Checkbox): Opção presente em ambos os modais de exportação. Remove as divisórias e recomepensa espaços em brancos dependendo do modo de processamento de layout nativo ou Blob base64.
 
 ## Estrutura de Aquivos Chave
 
