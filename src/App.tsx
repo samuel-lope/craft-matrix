@@ -770,656 +770,41 @@ export default function App() {
 
   return (
     <div className="flex h-screen w-full bg-neutral-950 text-neutral-200 font-sans overflow-hidden">
-      {/* Sidebar Controls */}
-      <aside className="w-80 flex-col overflow-y-auto z-10 custom-scrollbar border-r border-neutral-800 bg-black">
-        <div className="p-4 space-y-6 pb-24">
-          <div className="flex items-center gap-2 px-1 mb-2">
-            <Layout className="w-4 h-4 text-white" />
-            <h1 className="text-xs font-bold text-white tracking-widest uppercase">
-              Moldura Base
-            </h1>
-          </div>
+      
+      {/* Left Toolbar (Tools) */}
+      <aside className="w-16 flex flex-col items-center py-4 gap-4 z-20 border-r border-neutral-800 bg-black shrink-0 overflow-y-auto custom-scrollbar shadow-xl">
+        <ToolButton icon={MousePointer2} title="Pointer" isActive={activeTool === 'pointer'} onClick={() => setActiveTool('pointer')} />
+        
+        <div className="w-8 h-px bg-neutral-800 shrink-0" />
+        
+        <ToolButton icon={PaintBucket} title="Fill Background Color" isActive={activeTool === 'bg-color'} onClick={() => setActiveTool('bg-color')} />
+        <ToolButton icon={ImageIcon} title="Fill Background SVG" isActive={activeTool === 'bg-svg'} onClick={() => setActiveTool('bg-svg')} />
+        <ToolButton icon={Eraser} title="Erase Background" isActive={activeTool === 'bg-eraser'} onClick={() => setActiveTool('bg-eraser')} />
+        
+        <div className="w-8 h-px bg-neutral-800 shrink-0" />
+        
+        <ToolButton icon={ImageIcon} title="Place Item SVG" isActive={activeTool === 'item-svg'} onClick={() => setActiveTool('item-svg')} />
+        <ToolButton icon={Eraser} title="Erase Item" isActive={activeTool === 'item-eraser'} onClick={() => setActiveTool('item-eraser')} />
+        
+        <div className="w-8 h-px bg-neutral-800 shrink-0" />
+        
+        <ToolButton icon={Type} title="Place Text Label" isActive={activeTool === 'label'} onClick={() => setActiveTool('label')} />
+        <ToolButton icon={Eraser} title="Erase Text Label" isActive={activeTool === 'label-eraser'} onClick={() => setActiveTool('label-eraser')} />
+        
+        <div className="w-8 h-px bg-neutral-800 shrink-0" />
+        
+        <ToolButton icon={Square} title="Apply Cell Borders" isActive={activeTool === 'cell-border'} onClick={() => setActiveTool('cell-border')} />
+        <ToolButton icon={Eraser} title="Erase Cell Borders" isActive={activeTool === 'cell-border-eraser'} onClick={() => setActiveTool('cell-border-eraser')} />
 
-          <div className="w-full h-px bg-neutral-800" />
-
-          {/* Grid Parameters - Optimized */}
-          <ToolSection title="Grid Parameters" icon={Grid}>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5 border-none">
-                <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Rows</label>
-                <input
-                  type="number"
-                  min="1" max="100"
-                  value={gridState.rows}
-                  onChange={(e) => handleGridChange('rows', parseInt(e.target.value) || 1)}
-                  className="w-full h-8 px-3 bg-black border border-neutral-800 text-[10px] font-bold text-neutral-200 outline-none focus:border-white focus:ring-1 focus:ring-white transition-all"
-                />
-              </div>
-              <div className="space-y-1.5 border-none">
-                <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Cols</label>
-                <input
-                  type="number"
-                  min="1" max="100"
-                  value={gridState.cols}
-                  onChange={(e) => handleGridChange('cols', parseInt(e.target.value) || 1)}
-                  className="w-full h-8 px-3 bg-black border border-neutral-800 text-[10px] font-bold text-neutral-200 outline-none focus:border-white focus:ring-1 focus:ring-white transition-all"
-                />
-              </div>
-              <div className="space-y-1.5 border-none">
-                <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Cell Size (px)</label>
-                <input
-                  type="number"
-                  min="10" max="200"
-                  value={gridState.cellSize}
-                  onChange={(e) => handleGridChange('cellSize', parseInt(e.target.value) || 10)}
-                  className="w-full h-8 px-3 bg-black border border-neutral-800 text-[10px] font-bold text-neutral-200 outline-none focus:border-white focus:ring-1 focus:ring-white transition-all"
-                />
-              </div>
-              <div className="space-y-1.5 border-none">
-                <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Line Width</label>
-                <input
-                  type="number"
-                  min="0" max="20"
-                  value={gridState.lineThickness}
-                  onChange={(e) => handleGridChange('lineThickness', parseInt(e.target.value) || 0)}
-                  className="w-full h-8 px-3 bg-black border border-neutral-800 text-[10px] font-bold text-neutral-200 outline-none focus:border-white focus:ring-1 focus:ring-white transition-all"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Line Color</label>
-                <div className="flex h-8 bg-black border border-neutral-800 rounded-sm focus-within:ring-1 focus-within:ring-white transition-all overflow-hidden">
-                  <input
-                    type="color"
-                    value={gridState.lineColor}
-                    onChange={(e) => handleGridChange('lineColor', e.target.value)}
-                    className="w-10 h-full p-0 border-0 cursor-pointer seamless-color shrink-0 bg-transparent"
-                  />
-                  <div className="w-px h-full bg-neutral-800 shrink-0" />
-                  <input
-                    type="text"
-                    value={gridState.lineColor}
-                    onChange={(e) => handleGridChange('lineColor', e.target.value)}
-                    className="flex-1 w-full bg-transparent border-0 px-2 text-[10px] font-bold text-neutral-200 outline-none uppercase uppercase tracking-widest"
-                  />
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Border Color</label>
-                <div className="flex h-8 bg-black border border-neutral-800 rounded-sm focus-within:ring-1 focus-within:ring-white transition-all overflow-hidden">
-                  <input
-                    type="color"
-                    value={gridState.borderColor}
-                    onChange={(e) => handleGridChange('borderColor', e.target.value)}
-                    className="w-10 h-full p-0 border-0 cursor-pointer seamless-color shrink-0 bg-transparent"
-                  />
-                  <div className="w-px h-full bg-neutral-800 shrink-0" />
-                  <input
-                    type="text"
-                    value={gridState.borderColor}
-                    onChange={(e) => handleGridChange('borderColor', e.target.value)}
-                    className="flex-1 w-full bg-transparent border-0 px-2 text-[10px] font-bold text-neutral-200 outline-none uppercase uppercase tracking-widest"
-                  />
-                </div>
-              </div>
-            </div>
-          </ToolSection>
-
-          <div className="border-b border-neutral-800 pb-6">
-            <div className="space-y-1.5 px-1">
-              <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Outer Border Width</label>
-              <input
-                type="number"
-                min="0" max="50"
-                value={gridState.borderThickness}
-                onChange={(e) => handleGridChange('borderThickness', parseInt(e.target.value) || 0)}
-                className="w-full h-8 px-3 bg-black border border-neutral-800 text-[10px] font-bold text-neutral-200 outline-none focus:border-white focus:ring-1 focus:ring-white transition-all"
-              />
-            </div>
-          </div>
-
-          {/* Global Inner Background Setting */}
-          <div className="border-b border-neutral-800 pb-6 px-1">
-            <h3 className="text-[10px] font-bold text-sky-400 uppercase tracking-widest mb-4">Global Inner</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Color</label>
-                <div className="flex h-8 bg-black border border-neutral-800 rounded-sm focus-within:ring-1 focus-within:ring-white transition-all overflow-hidden">
-                  <input
-                    type="color"
-                    value={gridState.innerBgColor || '#ffffff'}
-                    onChange={(e) => handleGridChange('innerBgColor', e.target.value)}
-                    className="w-10 h-full p-0 border-0 cursor-pointer seamless-color shrink-0 bg-transparent"
-                  />
-                  <div className="w-px h-full bg-neutral-800 shrink-0" />
-                  <input
-                    type="text"
-                    value={gridState.innerBgColor || '#ffffff'}
-                    onChange={(e) => handleGridChange('innerBgColor', e.target.value)}
-                    className="flex-1 w-full bg-transparent border-0 px-2 text-[10px] font-bold text-neutral-200 outline-none uppercase uppercase tracking-widest"
-                  />
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Opacity (0-100%)</label>
-                <input
-                  type="number"
-                  min="0" max="100"
-                  value={Math.round((gridState.innerBgOpacity ?? 1) * 100)}
-                  onChange={(e) => {
-                    const val = Math.max(0, Math.min(100, parseInt(e.target.value) || 0));
-                    handleGridChange('innerBgOpacity', val / 100);
-                  }}
-                  className="w-full h-8 px-3 bg-black border border-neutral-800 text-[10px] font-bold text-neutral-200 outline-none focus:border-white focus:ring-1 focus:ring-white transition-all"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* External Margin Setting */}
-          <div className="border-b border-neutral-800 pb-6 px-1">
-            <h3 className="text-[10px] font-bold text-sky-400 uppercase tracking-widest mb-4">External Margin</h3>
-            <div className="grid grid-cols-1 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Size (px)</label>
-                <input
-                  type="number"
-                  min="0" max="500"
-                  value={gridState.externalMargin || 0}
-                  onChange={(e) => handleGridChange('externalMargin', parseInt(e.target.value) || 0)}
-                  className="w-full h-8 px-3 bg-black border border-neutral-800 text-[10px] font-bold text-neutral-200 outline-none focus:border-white focus:ring-1 focus:ring-white transition-all"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Color</label>
-                  <div className="flex h-8 bg-black border border-neutral-800 rounded-sm focus-within:ring-1 focus-within:ring-white transition-all overflow-hidden">
-                    <input
-                      type="color"
-                      value={gridState.externalMarginColor || '#ffffff'}
-                      onChange={(e) => handleGridChange('externalMarginColor', e.target.value)}
-                      className="w-10 h-full p-0 border-0 cursor-pointer seamless-color shrink-0 bg-transparent"
-                    />
-                    <div className="w-px h-full bg-neutral-800 shrink-0" />
-                    <input
-                      type="text"
-                      value={gridState.externalMarginColor || '#ffffff'}
-                      onChange={(e) => handleGridChange('externalMarginColor', e.target.value)}
-                      className="flex-1 w-full bg-transparent border-0 px-2 text-[10px] font-bold text-neutral-200 outline-none uppercase uppercase tracking-widest"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Opacity (0-100%)</label>
-                  <input
-                    type="number"
-                    min="0" max="100"
-                    value={Math.round((gridState.externalMarginOpacity ?? 0) * 100)}
-                    onChange={(e) => {
-                      const val = Math.max(0, Math.min(100, parseInt(e.target.value) || 0));
-                      handleGridChange('externalMarginOpacity', val / 100);
-                    }}
-                    className="w-full h-8 px-3 bg-black border border-neutral-800 text-[10px] font-bold text-neutral-200 outline-none focus:border-white focus:ring-1 focus:ring-white transition-all"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Workspace Background Setting */}
-          <div className="px-1">
-            <h3 className="text-[10px] font-bold text-sky-400 uppercase tracking-widest mb-4">Workspace Background</h3>
-            <div className="grid grid-cols-1 gap-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Color</label>
-                  <div className="flex h-8 bg-black border border-neutral-800 rounded-sm focus-within:ring-1 focus-within:ring-white transition-all overflow-hidden">
-                    <input
-                      type="color"
-                      value={gridState.workspaceBgColor || '#000000'}
-                      onChange={(e) => handleGridChange('workspaceBgColor', e.target.value)}
-                      className="w-10 h-full p-0 border-0 cursor-pointer seamless-color shrink-0 bg-transparent"
-                    />
-                    <div className="w-px h-full bg-neutral-800 shrink-0" />
-                    <input
-                      type="text"
-                      value={gridState.workspaceBgColor || '#000000'}
-                      onChange={(e) => handleGridChange('workspaceBgColor', e.target.value)}
-                      className="flex-1 w-full bg-transparent border-0 px-2 text-[10px] font-bold text-neutral-200 outline-none uppercase uppercase tracking-widest"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-1.5 flex flex-col justify-end">
-                  <button
-                    onClick={() => handleGridChange('workspaceBgImageUrl', '')}
-                    className="btn-danger w-full py-1 text-[10px] h-8"
-                  >
-                    Clear Texture
-                  </button>
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Texture (URL or SVG code)</label>
-                <textarea
-                  value={gridState.workspaceBgImageUrl || ''}
-                  onChange={(e) => handleGridChange('workspaceBgImageUrl', e.target.value)}
-                  placeholder="Paste image URL or <svg> code"
-                  className="w-full px-3 py-2 bg-black border border-neutral-800 text-[10px] font-bold text-neutral-200 outline-none focus:border-white focus:ring-1 focus:ring-white transition-all h-16 resize-none font-mono tracking-wider"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Background Tools */}
-          <ToolSection title="Background Tools">
-            <div className="grid grid-cols-3 gap-2">
-              <ToolButton icon={PaintBucket} title="Fill Background Color" isActive={activeTool === 'bg-color'} onClick={() => setActiveTool('bg-color')} />
-              <ToolButton icon={ImageIcon} title="Fill Background SVG" isActive={activeTool === 'bg-svg'} onClick={() => setActiveTool('bg-svg')} />
-              <ToolButton icon={Eraser} title="Erase Background" isActive={activeTool === 'bg-eraser'} onClick={() => setActiveTool('bg-eraser')} />
-            </div>
-
-            {activeTool === 'bg-color' && (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Select Color</label>
-                  <button onClick={() => setShowAssetManager(true)} className="text-[10px] text-neutral-400 hover:text-neutral-300 font-medium uppercase tracking-wider transition-colors">Manage</button>
-                </div>
-                <div className="grid grid-cols-4 gap-2">
-                  {savedColors.map(color => (
-                    <button
-                      key={color.id}
-                      onClick={() => setCurrentColor(color.value)}
-                      className={`h-8 rounded-md border transition-all ${currentColor === color.value ? 'ring-2 ring-neutral-500 ring-offset-2 ring-offset-neutral-900 border-transparent scale-110 shadow-lg' : 'border-neutral-600/50 hover:border-neutral-400 hover:scale-105'}`}
-                      style={{ backgroundColor: color.value }}
-                      title={color.name}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {activeTool === 'bg-svg' && (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Select Background SVG</label>
-                  <button onClick={() => setShowAssetManager(true)} className="text-[10px] text-neutral-400 hover:text-neutral-300 font-medium uppercase tracking-wider transition-colors">Manage</button>
-                </div>
-                <div className="grid grid-cols-3 gap-2">
-                  {savedBgSvgs.map(svg => (
-                    <button
-                      key={svg.id}
-                      onClick={() => setCurrentBgSvg(svg.value)}
-                      className={`h-12 rounded-md border flex items-center justify-center overflow-hidden transition-all bg-neutral-800 ${currentBgSvg === svg.value ? 'ring-2 ring-neutral-500 ring-offset-2 ring-offset-neutral-900 border-transparent shadow-lg' : 'border-neutral-600/50 hover:border-neutral-400'}`}
-                      title={svg.name}
-                      dangerouslySetInnerHTML={{ __html: svg.value }}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-          </ToolSection>
-
-          {/* Item Tools */}
-          <ToolSection title="Item Tools">
-            <div className="grid grid-cols-2 gap-2">
-              <ToolButton icon={ImageIcon} title="Place Item SVG" isActive={activeTool === 'item-svg'} onClick={() => setActiveTool('item-svg')} />
-              <ToolButton icon={Eraser} title="Erase Item" isActive={activeTool === 'item-eraser'} onClick={() => setActiveTool('item-eraser')} />
-            </div>
-
-            {activeTool === 'item-svg' && (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Select Item SVG</label>
-                  <button onClick={() => setShowAssetManager(true)} className="text-[10px] text-neutral-400 hover:text-neutral-300 font-medium uppercase tracking-wider transition-colors">Manage</button>
-                </div>
-                <div className="grid grid-cols-3 gap-2">
-                  {savedItemSvgs.map(svg => (
-                    <button
-                      key={svg.id}
-                      onClick={() => setCurrentItemSvg(svg.value)}
-                      className={`h-12 rounded-md border flex items-center justify-center overflow-hidden transition-all bg-neutral-800 ${currentItemSvg === svg.value ? 'ring-2 ring-neutral-500 ring-offset-2 ring-offset-neutral-900 border-transparent shadow-lg' : 'border-neutral-600/50 hover:border-neutral-400'}`}
-                      title={svg.name}
-                      dangerouslySetInnerHTML={{ __html: svg.value }}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-          </ToolSection>
-
-          {/* Label Tools */}
-          <ToolSection title="Label Tools">
-            <div className="grid grid-cols-2 gap-2">
-              <ToolButton icon={Type} title="Place Text Label" isActive={activeTool === 'label'} onClick={() => setActiveTool('label')} />
-              <ToolButton icon={Eraser} title="Erase Text Label" isActive={activeTool === 'label-eraser'} onClick={() => setActiveTool('label-eraser')} />
-            </div>
-
-            {activeTool === 'label' && (
-              <div className="space-y-4">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Label Text</label>
-                  <input
-                    type="text"
-                    value={currentLabelText}
-                    onChange={(e) => setCurrentLabelText(e.target.value)}
-                    placeholder="E.g. Room 1"
-                    className="w-full px-3 py-2 glass-input"
-                  />
-                </div>
-                
-                <div className="grid grid-cols-2 gap-3 mt-2">
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Font Select</label>
-                    <select
-                      value={currentLabelFont}
-                      onChange={(e) => setCurrentLabelFont(e.target.value)}
-                      className="w-full px-2 py-2 glass-input text-xs"
-                    >
-                      <option value="Inter, sans-serif">Inter</option>
-                      <option value="Arial, sans-serif">Arial</option>
-                      <option value="'Courier New', Courier, monospace">Courier New</option>
-                      <option value="'Times New Roman', Times, serif">Times New</option>
-                      <option value="'Comic Sans MS', cursive, sans-serif">Comic Sans</option>
-                      <option value="'Georgia', serif">Georgia</option>
-                       <option value="'Trebuchet MS', sans-serif">Trebuchet</option>
-                    </select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Size (px)</label>
-                    <input
-                      type="number"
-                      min="8" max="100"
-                      value={currentLabelSize}
-                      onChange={(e) => setCurrentLabelSize(parseInt(e.target.value) || 12)}
-                      className="w-full px-3 py-2 glass-input"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1.5 mt-2">
-                  <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Alignment</label>
-                  <div className="flex bg-neutral-900/50 p-1 rounded-lg border border-neutral-700/50">
-                    <button
-                      onClick={() => setCurrentLabelAlign('start')}
-                      className={`flex-1 py-1.5 text-[11px] font-semibold rounded-md transition-all ${currentLabelAlign === 'start' ? 'bg-neutral-500/20 text-neutral-400 shadow-sm' : 'text-neutral-400 hover:text-neutral-200'}`}
-                    >
-                      Start
-                    </button>
-                    <button
-                      onClick={() => setCurrentLabelAlign('center')}
-                      className={`flex-1 py-1.5 text-[11px] font-semibold rounded-md transition-all ${currentLabelAlign === 'center' ? 'bg-neutral-500/20 text-neutral-400 shadow-sm' : 'text-neutral-400 hover:text-neutral-200'}`}
-                    >
-                      Center
-                    </button>
-                    <button
-                      onClick={() => setCurrentLabelAlign('end')}
-                      className={`flex-1 py-1.5 text-[11px] font-semibold rounded-md transition-all ${currentLabelAlign === 'end' ? 'bg-neutral-500/20 text-neutral-400 shadow-sm' : 'text-neutral-400 hover:text-neutral-200'}`}
-                    >
-                      End
-                    </button>
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t border-neutral-800">
-                  <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Text Color</label>
-                  <div className="flex h-8 bg-black border border-neutral-800 rounded-sm focus-within:ring-1 focus-within:ring-white transition-all overflow-hidden">
-                    <input
-                      type="color"
-                      value={currentLabelColor}
-                      onChange={(e) => setCurrentLabelColor(e.target.value)}
-                      className="w-10 h-full p-0 border-0 cursor-pointer seamless-color shrink-0 bg-transparent"
-                    />
-                    <div className="w-px h-full bg-neutral-800 shrink-0" />
-                    <input
-                      type="text"
-                      value={currentLabelColor}
-                      onChange={(e) => setCurrentLabelColor(e.target.value)}
-                      className="flex-1 w-full bg-transparent border-0 px-2 text-[10px] font-bold text-neutral-200 outline-none uppercase tracking-widest"
-                    />
-                  </div>
-                </div>
-
-                {/* Label Frame / Background */}
-                <div className="pt-4 border-t border-neutral-800 space-y-4">
-                  <label className="flex items-center gap-2 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={currentLabelFrameEnabled}
-                      onChange={(e) => setCurrentLabelFrameEnabled(e.target.checked)}
-                      className="w-4 h-4 accent-white cursor-pointer"
-                    />
-                    <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Label Frame</span>
-                  </label>
-
-                  {currentLabelFrameEnabled && (
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Fill Color</label>
-                          <div className="flex h-8 bg-black border border-neutral-800 rounded-sm focus-within:ring-1 focus-within:ring-white transition-all overflow-hidden">
-                            <input
-                              type="color"
-                              value={currentLabelFrameBgColor}
-                              onChange={(e) => setCurrentLabelFrameBgColor(e.target.value)}
-                              className="w-10 h-full p-0 border-0 cursor-pointer seamless-color shrink-0 bg-transparent"
-                            />
-                            <div className="w-px h-full bg-neutral-800 shrink-0" />
-                            <input
-                              type="text"
-                              value={currentLabelFrameBgColor}
-                              onChange={(e) => setCurrentLabelFrameBgColor(e.target.value)}
-                              className="flex-1 w-full bg-transparent border-0 px-2 text-[10px] font-bold text-neutral-200 outline-none uppercase tracking-widest"
-                            />
-                          </div>
-                        </div>
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Fill Opacity (%)</label>
-                          <input
-                            type="number"
-                            min="0" max="100"
-                            value={Math.round(currentLabelFrameBgOpacity * 100)}
-                            onChange={(e) => {
-                              const val = Math.max(0, Math.min(100, parseInt(e.target.value) || 0));
-                              setCurrentLabelFrameBgOpacity(val / 100);
-                            }}
-                            className="w-full h-8 px-3 bg-black border border-neutral-800 text-[10px] font-bold text-neutral-200 outline-none focus:border-white focus:ring-1 focus:ring-white transition-all"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Border Color</label>
-                          <div className="flex h-8 bg-black border border-neutral-800 rounded-sm focus-within:ring-1 focus-within:ring-white transition-all overflow-hidden">
-                            <input
-                              type="color"
-                              value={currentLabelFrameBorderColor}
-                              onChange={(e) => setCurrentLabelFrameBorderColor(e.target.value)}
-                              className="w-10 h-full p-0 border-0 cursor-pointer seamless-color shrink-0 bg-transparent"
-                            />
-                            <div className="w-px h-full bg-neutral-800 shrink-0" />
-                            <input
-                              type="text"
-                              value={currentLabelFrameBorderColor}
-                              onChange={(e) => setCurrentLabelFrameBorderColor(e.target.value)}
-                              className="flex-1 w-full bg-transparent border-0 px-2 text-[10px] font-bold text-neutral-200 outline-none uppercase tracking-widest"
-                            />
-                          </div>
-                        </div>
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Border Width</label>
-                          <input
-                            type="number"
-                            min="0" max="20"
-                            value={currentLabelFrameBorderWidth}
-                            onChange={(e) => setCurrentLabelFrameBorderWidth(parseInt(e.target.value) || 0)}
-                            className="w-full h-8 px-3 bg-black border border-neutral-800 text-[10px] font-bold text-neutral-200 outline-none focus:border-white focus:ring-1 focus:ring-white transition-all"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Radius (px)</label>
-                          <input
-                            type="number"
-                            min="0" max="100"
-                            value={currentLabelFrameRadius}
-                            onChange={(e) => setCurrentLabelFrameRadius(parseInt(e.target.value) || 0)}
-                            className="w-full h-8 px-3 bg-black border border-neutral-800 text-[10px] font-bold text-neutral-200 outline-none focus:border-white focus:ring-1 focus:ring-white transition-all"
-                          />
-                        </div>
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Padding (px)</label>
-                          <input
-                            type="number"
-                            min="0" max="50"
-                            value={currentLabelFramePadding}
-                            onChange={(e) => setCurrentLabelFramePadding(parseInt(e.target.value) || 0)}
-                            className="w-full h-8 px-3 bg-black border border-neutral-800 text-[10px] font-bold text-neutral-200 outline-none focus:border-white focus:ring-1 focus:ring-white transition-all"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </ToolSection>
-
-          {/* Cell Border Tools */}
-          <ToolSection title="Cell Border Tools">
-            <div className="grid grid-cols-2 gap-2">
-              <ToolButton icon={Square} title="Apply Cell Borders" isActive={activeTool === 'cell-border'} onClick={() => setActiveTool('cell-border')} />
-              <ToolButton icon={Eraser} title="Erase Cell Borders" isActive={activeTool === 'cell-border-eraser'} onClick={() => setActiveTool('cell-border-eraser')} />
-            </div>
-
-            {(activeTool === 'cell-border' || activeTool === 'cell-border-eraser') && (
-              <div className="space-y-5">
-                <div className="space-y-3">
-                  <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider text-center block">Edges to Apply/Erase</label>
-                  <div className="flex justify-center items-center gap-1 p-3 bg-neutral-900/50 rounded-xl border border-neutral-700/50 w-fit mx-auto shadow-inner">
-                    <div className="grid grid-cols-3 grid-rows-3 gap-1 w-16 h-16">
-                      <div />
-                      <button
-                        onClick={() => toggleEdge('top')}
-                        className={`rounded-sm transition-all ${activeEdges.top ? 'bg-neutral-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]' : 'bg-neutral-700 hover:bg-neutral-600'}`}
-                        title="Top Edge"
-                      />
-                      <div />
-                      <button
-                        onClick={() => toggleEdge('left')}
-                        className={`rounded-sm transition-all ${activeEdges.left ? 'bg-neutral-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]' : 'bg-neutral-700 hover:bg-neutral-600'}`}
-                        title="Left Edge"
-                      />
-                      <div className="bg-neutral-800 rounded-sm border border-neutral-600/50" />
-                      <button
-                        onClick={() => toggleEdge('right')}
-                        className={`rounded-sm transition-all ${activeEdges.right ? 'bg-neutral-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]' : 'bg-neutral-700 hover:bg-neutral-600'}`}
-                        title="Right Edge"
-                      />
-                      <div />
-                      <button
-                        onClick={() => toggleEdge('bottom')}
-                        className={`rounded-sm transition-all ${activeEdges.bottom ? 'bg-neutral-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]' : 'bg-neutral-700 hover:bg-neutral-600'}`}
-                        title="Bottom Edge"
-                      />
-                      <div />
-                    </div>
-                  </div>
-                </div>
-
-                {activeTool === 'cell-border' && (
-                  <div className="pt-2 border-t border-neutral-700/50 space-y-4">
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Border Width (px)</label>
-                      <input
-                        type="number"
-                        min="1" max="20"
-                        value={currentCellBorderWidth}
-                        onChange={(e) => setCurrentCellBorderWidth(parseInt(e.target.value) || 1)}
-                        className="w-full px-3 py-2 glass-input"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Alignment</label>
-                      <div className="flex bg-neutral-900/50 p-1 rounded-lg border border-neutral-700/50">
-                        <button
-                          onClick={() => setCurrentCellBorderAlignment('inner')}
-                          className={`flex-1 py-1.5 text-[11px] font-semibold rounded-md transition-all ${currentCellBorderAlignment === 'inner' ? 'bg-neutral-500/20 text-neutral-400 shadow-sm' : 'text-neutral-400 hover:text-neutral-200'}`}
-                        >
-                          Inner
-                        </button>
-                        <button
-                          onClick={() => setCurrentCellBorderAlignment('center')}
-                          className={`flex-1 py-1.5 text-[11px] font-semibold rounded-md transition-all ${currentCellBorderAlignment === 'center' ? 'bg-neutral-500/20 text-neutral-400 shadow-sm' : 'text-neutral-400 hover:text-neutral-200'}`}
-                        >
-                          Center
-                        </button>
-                        <button
-                          onClick={() => setCurrentCellBorderAlignment('outer')}
-                          className={`flex-1 py-1.5 text-[11px] font-semibold rounded-md transition-all ${currentCellBorderAlignment === 'outer' ? 'bg-neutral-500/20 text-neutral-400 shadow-sm' : 'text-neutral-400 hover:text-neutral-200'}`}
-                        >
-                          Outer
-                        </button>
-                      </div>
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Border Color</label>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="color"
-                          value={currentCellBorderColor}
-                          onChange={(e) => setCurrentCellBorderColor(e.target.value)}
-                          className="w-8 h-8 rounded border-0 p-0 cursor-pointer bg-transparent"
-                        />
-                        <input
-                          type="text"
-                          value={currentCellBorderColor}
-                          onChange={(e) => setCurrentCellBorderColor(e.target.value)}
-                          className="w-full px-3 py-2 glass-input text-xs uppercase"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </ToolSection>
-
-          {/* General Tools */}
-          <section className="space-y-4 pt-2 border-t border-neutral-700/50 mt-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest px-1">General Tools</h2>
-              <button
-                onClick={() => setGridState(prev => ({ ...prev, cells: {} }))}
-                className="text-[10px] font-bold text-rose-400 hover:text-rose-300 uppercase tracking-widest transition-colors px-2 py-1 rounded hover:bg-rose-500/10"
-              >
-                Clear Grid
-              </button>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={() => setActiveTool('pointer')}
-                className={`p-2 rounded-lg flex justify-center items-center transition-all ${activeTool === 'pointer' ? 'tool-btn-active' : 'tool-btn-inactive'}`}
-                title="Pointer"
-              >
-                <MousePointer2 className="w-5 h-5" />
-                <span className="ml-2 text-xs font-semibold">Pointer</span>
-              </button>
-              <button
-                onClick={() => setActiveTool('eraser-all')}
-                className={`p-2 rounded-lg flex justify-center items-center transition-all ${activeTool === 'eraser-all' ? 'bg-rose-500/20 text-rose-400 ring-1 ring-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.3)]' : 'tool-btn-inactive'}`}
-                title="Erase All in Cell"
-              >
-                <Eraser className="w-5 h-5" />
-                <span className="ml-2 text-xs font-semibold">Erase Area</span>
-              </button>
-            </div>
-          </section>
-        </div>
+        <div className="w-8 h-px bg-neutral-800 shrink-0" />
+        
+        <button
+          onClick={() => setActiveTool('eraser-all')}
+          className={`p-2 rounded-lg flex justify-center items-center transition-all ${activeTool === 'eraser-all' ? 'bg-rose-500/20 text-rose-400 ring-1 ring-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.3)]' : 'tool-btn-inactive'}`}
+          title="Erase All in Cell"
+        >
+          <Eraser className="w-5 h-5" />
+        </button>
       </aside>
 
       {/* Main Grid Area */}
@@ -1761,6 +1146,611 @@ export default function App() {
           </div>
         </div>
       </Modal>
+    
+
+      {/* Properties Sidebar (Right) */}
+      <aside className="w-80 flex-col overflow-y-auto z-20 custom-scrollbar border-l border-neutral-800 bg-black shrink-0 shadow-2xl">
+        <div className="p-4 space-y-6 pb-24">
+          <div className="flex items-center justify-between px-1 mb-2">
+            <div className="flex items-center gap-2">
+              <Layout className="w-4 h-4 text-white" />
+              <h1 className="text-xs font-bold text-white tracking-widest uppercase">Grid & Properties</h1>
+            </div>
+            <button
+              onClick={() => setGridState(prev => ({ ...prev, cells: {} }))}
+              className="text-[10px] font-bold text-rose-400 hover:text-rose-300 uppercase tracking-widest transition-colors px-2 py-1 rounded hover:bg-rose-500/10"
+              title="Clear entire grid content"
+            >
+              Clear Grid
+            </button>
+          </div>
+          
+          <div className="w-full h-px bg-neutral-800" />
+
+          {/* Grid Parameters Base */}
+          {/* Grid Parameters - Optimized */}
+          <ToolSection title="Grid Parameters" icon={Grid}>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5 border-none">
+                <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Rows</label>
+                <input
+                  type="number"
+                  min="1" max="100"
+                  value={gridState.rows}
+                  onChange={(e) => handleGridChange('rows', parseInt(e.target.value) || 1)}
+                  className="w-full h-8 px-3 bg-black border border-neutral-800 text-[10px] font-bold text-neutral-200 outline-none focus:border-white focus:ring-1 focus:ring-white transition-all"
+                />
+              </div>
+              <div className="space-y-1.5 border-none">
+                <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Cols</label>
+                <input
+                  type="number"
+                  min="1" max="100"
+                  value={gridState.cols}
+                  onChange={(e) => handleGridChange('cols', parseInt(e.target.value) || 1)}
+                  className="w-full h-8 px-3 bg-black border border-neutral-800 text-[10px] font-bold text-neutral-200 outline-none focus:border-white focus:ring-1 focus:ring-white transition-all"
+                />
+              </div>
+              <div className="space-y-1.5 border-none">
+                <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Cell Size (px)</label>
+                <input
+                  type="number"
+                  min="10" max="200"
+                  value={gridState.cellSize}
+                  onChange={(e) => handleGridChange('cellSize', parseInt(e.target.value) || 10)}
+                  className="w-full h-8 px-3 bg-black border border-neutral-800 text-[10px] font-bold text-neutral-200 outline-none focus:border-white focus:ring-1 focus:ring-white transition-all"
+                />
+              </div>
+              <div className="space-y-1.5 border-none">
+                <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Line Width</label>
+                <input
+                  type="number"
+                  min="0" max="20"
+                  value={gridState.lineThickness}
+                  onChange={(e) => handleGridChange('lineThickness', parseInt(e.target.value) || 0)}
+                  className="w-full h-8 px-3 bg-black border border-neutral-800 text-[10px] font-bold text-neutral-200 outline-none focus:border-white focus:ring-1 focus:ring-white transition-all"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Line Color</label>
+                <div className="flex h-8 bg-black border border-neutral-800 rounded-sm focus-within:ring-1 focus-within:ring-white transition-all overflow-hidden">
+                  <input
+                    type="color"
+                    value={gridState.lineColor}
+                    onChange={(e) => handleGridChange('lineColor', e.target.value)}
+                    className="w-10 h-full p-0 border-0 cursor-pointer seamless-color shrink-0 bg-transparent"
+                  />
+                  <div className="w-px h-full bg-neutral-800 shrink-0" />
+                  <input
+                    type="text"
+                    value={gridState.lineColor}
+                    onChange={(e) => handleGridChange('lineColor', e.target.value)}
+                    className="flex-1 w-full bg-transparent border-0 px-2 text-[10px] font-bold text-neutral-200 outline-none uppercase uppercase tracking-widest"
+                  />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Border Color</label>
+                <div className="flex h-8 bg-black border border-neutral-800 rounded-sm focus-within:ring-1 focus-within:ring-white transition-all overflow-hidden">
+                  <input
+                    type="color"
+                    value={gridState.borderColor}
+                    onChange={(e) => handleGridChange('borderColor', e.target.value)}
+                    className="w-10 h-full p-0 border-0 cursor-pointer seamless-color shrink-0 bg-transparent"
+                  />
+                  <div className="w-px h-full bg-neutral-800 shrink-0" />
+                  <input
+                    type="text"
+                    value={gridState.borderColor}
+                    onChange={(e) => handleGridChange('borderColor', e.target.value)}
+                    className="flex-1 w-full bg-transparent border-0 px-2 text-[10px] font-bold text-neutral-200 outline-none uppercase uppercase tracking-widest"
+                  />
+                </div>
+              </div>
+            </div>
+          </ToolSection>
+
+          <div className="border-b border-neutral-800 pb-6">
+            <div className="space-y-1.5 px-1">
+              <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Outer Border Width</label>
+              <input
+                type="number"
+                min="0" max="50"
+                value={gridState.borderThickness}
+                onChange={(e) => handleGridChange('borderThickness', parseInt(e.target.value) || 0)}
+                className="w-full h-8 px-3 bg-black border border-neutral-800 text-[10px] font-bold text-neutral-200 outline-none focus:border-white focus:ring-1 focus:ring-white transition-all"
+              />
+            </div>
+          </div>
+
+          {/* Global Inner Background Setting */}
+          <div className="border-b border-neutral-800 pb-6 px-1">
+            <h3 className="text-[10px] font-bold text-sky-400 uppercase tracking-widest mb-4">Global Inner</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Color</label>
+                <div className="flex h-8 bg-black border border-neutral-800 rounded-sm focus-within:ring-1 focus-within:ring-white transition-all overflow-hidden">
+                  <input
+                    type="color"
+                    value={gridState.innerBgColor || '#ffffff'}
+                    onChange={(e) => handleGridChange('innerBgColor', e.target.value)}
+                    className="w-10 h-full p-0 border-0 cursor-pointer seamless-color shrink-0 bg-transparent"
+                  />
+                  <div className="w-px h-full bg-neutral-800 shrink-0" />
+                  <input
+                    type="text"
+                    value={gridState.innerBgColor || '#ffffff'}
+                    onChange={(e) => handleGridChange('innerBgColor', e.target.value)}
+                    className="flex-1 w-full bg-transparent border-0 px-2 text-[10px] font-bold text-neutral-200 outline-none uppercase uppercase tracking-widest"
+                  />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Opacity (0-100%)</label>
+                <input
+                  type="number"
+                  min="0" max="100"
+                  value={Math.round((gridState.innerBgOpacity ?? 1) * 100)}
+                  onChange={(e) => {
+                    const val = Math.max(0, Math.min(100, parseInt(e.target.value) || 0));
+                    handleGridChange('innerBgOpacity', val / 100);
+                  }}
+                  className="w-full h-8 px-3 bg-black border border-neutral-800 text-[10px] font-bold text-neutral-200 outline-none focus:border-white focus:ring-1 focus:ring-white transition-all"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* External Margin Setting */}
+          <div className="border-b border-neutral-800 pb-6 px-1">
+            <h3 className="text-[10px] font-bold text-sky-400 uppercase tracking-widest mb-4">External Margin</h3>
+            <div className="grid grid-cols-1 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Size (px)</label>
+                <input
+                  type="number"
+                  min="0" max="500"
+                  value={gridState.externalMargin || 0}
+                  onChange={(e) => handleGridChange('externalMargin', parseInt(e.target.value) || 0)}
+                  className="w-full h-8 px-3 bg-black border border-neutral-800 text-[10px] font-bold text-neutral-200 outline-none focus:border-white focus:ring-1 focus:ring-white transition-all"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Color</label>
+                  <div className="flex h-8 bg-black border border-neutral-800 rounded-sm focus-within:ring-1 focus-within:ring-white transition-all overflow-hidden">
+                    <input
+                      type="color"
+                      value={gridState.externalMarginColor || '#ffffff'}
+                      onChange={(e) => handleGridChange('externalMarginColor', e.target.value)}
+                      className="w-10 h-full p-0 border-0 cursor-pointer seamless-color shrink-0 bg-transparent"
+                    />
+                    <div className="w-px h-full bg-neutral-800 shrink-0" />
+                    <input
+                      type="text"
+                      value={gridState.externalMarginColor || '#ffffff'}
+                      onChange={(e) => handleGridChange('externalMarginColor', e.target.value)}
+                      className="flex-1 w-full bg-transparent border-0 px-2 text-[10px] font-bold text-neutral-200 outline-none uppercase uppercase tracking-widest"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Opacity (0-100%)</label>
+                  <input
+                    type="number"
+                    min="0" max="100"
+                    value={Math.round((gridState.externalMarginOpacity ?? 0) * 100)}
+                    onChange={(e) => {
+                      const val = Math.max(0, Math.min(100, parseInt(e.target.value) || 0));
+                      handleGridChange('externalMarginOpacity', val / 100);
+                    }}
+                    className="w-full h-8 px-3 bg-black border border-neutral-800 text-[10px] font-bold text-neutral-200 outline-none focus:border-white focus:ring-1 focus:ring-white transition-all"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Workspace Background Setting */}
+          <div className="px-1">
+            <h3 className="text-[10px] font-bold text-sky-400 uppercase tracking-widest mb-4">Workspace Background</h3>
+            <div className="grid grid-cols-1 gap-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Color</label>
+                  <div className="flex h-8 bg-black border border-neutral-800 rounded-sm focus-within:ring-1 focus-within:ring-white transition-all overflow-hidden">
+                    <input
+                      type="color"
+                      value={gridState.workspaceBgColor || '#000000'}
+                      onChange={(e) => handleGridChange('workspaceBgColor', e.target.value)}
+                      className="w-10 h-full p-0 border-0 cursor-pointer seamless-color shrink-0 bg-transparent"
+                    />
+                    <div className="w-px h-full bg-neutral-800 shrink-0" />
+                    <input
+                      type="text"
+                      value={gridState.workspaceBgColor || '#000000'}
+                      onChange={(e) => handleGridChange('workspaceBgColor', e.target.value)}
+                      className="flex-1 w-full bg-transparent border-0 px-2 text-[10px] font-bold text-neutral-200 outline-none uppercase uppercase tracking-widest"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1.5 flex flex-col justify-end">
+                  <button
+                    onClick={() => handleGridChange('workspaceBgImageUrl', '')}
+                    className="btn-danger w-full py-1 text-[10px] h-8"
+                  >
+                    Clear Texture
+                  </button>
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Texture (URL or SVG code)</label>
+                <textarea
+                  value={gridState.workspaceBgImageUrl || ''}
+                  onChange={(e) => handleGridChange('workspaceBgImageUrl', e.target.value)}
+                  placeholder="Paste image URL or <svg> code"
+                  className="w-full px-3 py-2 bg-black border border-neutral-800 text-[10px] font-bold text-neutral-200 outline-none focus:border-white focus:ring-1 focus:ring-white transition-all h-16 resize-none font-mono tracking-wider"
+                />
+              </div>
+            </div>
+          </div>
+
+          
+          
+          {/* Active Tool Properties */}
+          <div className="w-full h-px bg-neutral-800 my-6" />
+          <h2 className="text-[10px] font-bold text-sky-400 uppercase tracking-widest px-1 mb-4 flex items-center gap-2">
+            <Settings className="w-3.5 h-3.5" />
+            Tool Settings
+          </h2>
+          <div className="px-1">
+            {activeTool === 'bg-color' && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Select Color</label>
+                  <button onClick={() => setShowAssetManager(true)} className="text-[10px] text-neutral-400 hover:text-neutral-300 font-medium uppercase tracking-wider transition-colors">Manage</button>
+                </div>
+                <div className="grid grid-cols-4 gap-2">
+                  {savedColors.map(color => (
+                    <button
+                      key={color.id}
+                      onClick={() => setCurrentColor(color.value)}
+                      className={`h-8 rounded-md border transition-all ${currentColor === color.value ? 'ring-2 ring-neutral-500 ring-offset-2 ring-offset-neutral-900 border-transparent scale-110 shadow-lg' : 'border-neutral-600/50 hover:border-neutral-400 hover:scale-105'}`}
+                      style={{ backgroundColor: color.value }}
+                      title={color.name}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activeTool === 'bg-svg' && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Select Background SVG</label>
+                  <button onClick={() => setShowAssetManager(true)} className="text-[10px] text-neutral-400 hover:text-neutral-300 font-medium uppercase tracking-wider transition-colors">Manage</button>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {savedBgSvgs.map(svg => (
+                    <button
+                      key={svg.id}
+                      onClick={() => setCurrentBgSvg(svg.value)}
+                      className={`h-12 rounded-md border flex items-center justify-center overflow-hidden transition-all bg-neutral-800 ${currentBgSvg === svg.value ? 'ring-2 ring-neutral-500 ring-offset-2 ring-offset-neutral-900 border-transparent shadow-lg' : 'border-neutral-600/50 hover:border-neutral-400'}`}
+                      title={svg.name}
+                      dangerouslySetInnerHTML={{ __html: svg.value }}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+          {activeTool === 'item-svg' && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Select Item SVG</label>
+                  <button onClick={() => setShowAssetManager(true)} className="text-[10px] text-neutral-400 hover:text-neutral-300 font-medium uppercase tracking-wider transition-colors">Manage</button>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {savedItemSvgs.map(svg => (
+                    <button
+                      key={svg.id}
+                      onClick={() => setCurrentItemSvg(svg.value)}
+                      className={`h-12 rounded-md border flex items-center justify-center overflow-hidden transition-all bg-neutral-800 ${currentItemSvg === svg.value ? 'ring-2 ring-neutral-500 ring-offset-2 ring-offset-neutral-900 border-transparent shadow-lg' : 'border-neutral-600/50 hover:border-neutral-400'}`}
+                      title={svg.name}
+                      dangerouslySetInnerHTML={{ __html: svg.value }}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+          {activeTool === 'label' && (
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Label Text</label>
+                  <input
+                    type="text"
+                    value={currentLabelText}
+                    onChange={(e) => setCurrentLabelText(e.target.value)}
+                    placeholder="E.g. Room 1"
+                    className="w-full px-3 py-2 glass-input"
+                  />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3 mt-2">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Font Select</label>
+                    <select
+                      value={currentLabelFont}
+                      onChange={(e) => setCurrentLabelFont(e.target.value)}
+                      className="w-full px-2 py-2 glass-input text-xs"
+                    >
+                      <option value="Inter, sans-serif">Inter</option>
+                      <option value="Arial, sans-serif">Arial</option>
+                      <option value="'Courier New', Courier, monospace">Courier New</option>
+                      <option value="'Times New Roman', Times, serif">Times New</option>
+                      <option value="'Comic Sans MS', cursive, sans-serif">Comic Sans</option>
+                      <option value="'Georgia', serif">Georgia</option>
+                       <option value="'Trebuchet MS', sans-serif">Trebuchet</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Size (px)</label>
+                    <input
+                      type="number"
+                      min="8" max="100"
+                      value={currentLabelSize}
+                      onChange={(e) => setCurrentLabelSize(parseInt(e.target.value) || 12)}
+                      className="w-full px-3 py-2 glass-input"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5 mt-2">
+                  <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Alignment</label>
+                  <div className="flex bg-neutral-900/50 p-1 rounded-lg border border-neutral-700/50">
+                    <button
+                      onClick={() => setCurrentLabelAlign('start')}
+                      className={`flex-1 py-1.5 text-[11px] font-semibold rounded-md transition-all ${currentLabelAlign === 'start' ? 'bg-neutral-500/20 text-neutral-400 shadow-sm' : 'text-neutral-400 hover:text-neutral-200'}`}
+                    >
+                      Start
+                    </button>
+                    <button
+                      onClick={() => setCurrentLabelAlign('center')}
+                      className={`flex-1 py-1.5 text-[11px] font-semibold rounded-md transition-all ${currentLabelAlign === 'center' ? 'bg-neutral-500/20 text-neutral-400 shadow-sm' : 'text-neutral-400 hover:text-neutral-200'}`}
+                    >
+                      Center
+                    </button>
+                    <button
+                      onClick={() => setCurrentLabelAlign('end')}
+                      className={`flex-1 py-1.5 text-[11px] font-semibold rounded-md transition-all ${currentLabelAlign === 'end' ? 'bg-neutral-500/20 text-neutral-400 shadow-sm' : 'text-neutral-400 hover:text-neutral-200'}`}
+                    >
+                      End
+                    </button>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-neutral-800">
+                  <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Text Color</label>
+                  <div className="flex h-8 bg-black border border-neutral-800 rounded-sm focus-within:ring-1 focus-within:ring-white transition-all overflow-hidden">
+                    <input
+                      type="color"
+                      value={currentLabelColor}
+                      onChange={(e) => setCurrentLabelColor(e.target.value)}
+                      className="w-10 h-full p-0 border-0 cursor-pointer seamless-color shrink-0 bg-transparent"
+                    />
+                    <div className="w-px h-full bg-neutral-800 shrink-0" />
+                    <input
+                      type="text"
+                      value={currentLabelColor}
+                      onChange={(e) => setCurrentLabelColor(e.target.value)}
+                      className="flex-1 w-full bg-transparent border-0 px-2 text-[10px] font-bold text-neutral-200 outline-none uppercase tracking-widest"
+                    />
+                  </div>
+                </div>
+
+                {/* Label Frame / Background */}
+                <div className="pt-4 border-t border-neutral-800 space-y-4">
+                  <label className="flex items-center gap-2 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={currentLabelFrameEnabled}
+                      onChange={(e) => setCurrentLabelFrameEnabled(e.target.checked)}
+                      className="w-4 h-4 accent-white cursor-pointer"
+                    />
+                    <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Label Frame</span>
+                  </label>
+
+                  {currentLabelFrameEnabled && (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Fill Color</label>
+                          <div className="flex h-8 bg-black border border-neutral-800 rounded-sm focus-within:ring-1 focus-within:ring-white transition-all overflow-hidden">
+                            <input
+                              type="color"
+                              value={currentLabelFrameBgColor}
+                              onChange={(e) => setCurrentLabelFrameBgColor(e.target.value)}
+                              className="w-10 h-full p-0 border-0 cursor-pointer seamless-color shrink-0 bg-transparent"
+                            />
+                            <div className="w-px h-full bg-neutral-800 shrink-0" />
+                            <input
+                              type="text"
+                              value={currentLabelFrameBgColor}
+                              onChange={(e) => setCurrentLabelFrameBgColor(e.target.value)}
+                              className="flex-1 w-full bg-transparent border-0 px-2 text-[10px] font-bold text-neutral-200 outline-none uppercase tracking-widest"
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Fill Opacity (%)</label>
+                          <input
+                            type="number"
+                            min="0" max="100"
+                            value={Math.round(currentLabelFrameBgOpacity * 100)}
+                            onChange={(e) => {
+                              const val = Math.max(0, Math.min(100, parseInt(e.target.value) || 0));
+                              setCurrentLabelFrameBgOpacity(val / 100);
+                            }}
+                            className="w-full h-8 px-3 bg-black border border-neutral-800 text-[10px] font-bold text-neutral-200 outline-none focus:border-white focus:ring-1 focus:ring-white transition-all"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Border Color</label>
+                          <div className="flex h-8 bg-black border border-neutral-800 rounded-sm focus-within:ring-1 focus-within:ring-white transition-all overflow-hidden">
+                            <input
+                              type="color"
+                              value={currentLabelFrameBorderColor}
+                              onChange={(e) => setCurrentLabelFrameBorderColor(e.target.value)}
+                              className="w-10 h-full p-0 border-0 cursor-pointer seamless-color shrink-0 bg-transparent"
+                            />
+                            <div className="w-px h-full bg-neutral-800 shrink-0" />
+                            <input
+                              type="text"
+                              value={currentLabelFrameBorderColor}
+                              onChange={(e) => setCurrentLabelFrameBorderColor(e.target.value)}
+                              className="flex-1 w-full bg-transparent border-0 px-2 text-[10px] font-bold text-neutral-200 outline-none uppercase tracking-widest"
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Border Width</label>
+                          <input
+                            type="number"
+                            min="0" max="20"
+                            value={currentLabelFrameBorderWidth}
+                            onChange={(e) => setCurrentLabelFrameBorderWidth(parseInt(e.target.value) || 0)}
+                            className="w-full h-8 px-3 bg-black border border-neutral-800 text-[10px] font-bold text-neutral-200 outline-none focus:border-white focus:ring-1 focus:ring-white transition-all"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Radius (px)</label>
+                          <input
+                            type="number"
+                            min="0" max="100"
+                            value={currentLabelFrameRadius}
+                            onChange={(e) => setCurrentLabelFrameRadius(parseInt(e.target.value) || 0)}
+                            className="w-full h-8 px-3 bg-black border border-neutral-800 text-[10px] font-bold text-neutral-200 outline-none focus:border-white focus:ring-1 focus:ring-white transition-all"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Padding (px)</label>
+                          <input
+                            type="number"
+                            min="0" max="50"
+                            value={currentLabelFramePadding}
+                            onChange={(e) => setCurrentLabelFramePadding(parseInt(e.target.value) || 0)}
+                            className="w-full h-8 px-3 bg-black border border-neutral-800 text-[10px] font-bold text-neutral-200 outline-none focus:border-white focus:ring-1 focus:ring-white transition-all"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          {(activeTool === 'cell-border' || activeTool === 'cell-border-eraser') && (
+              <div className="space-y-5">
+                <div className="space-y-3">
+                  <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider text-center block">Edges to Apply/Erase</label>
+                  <div className="flex justify-center items-center gap-1 p-3 bg-neutral-900/50 rounded-xl border border-neutral-700/50 w-fit mx-auto shadow-inner">
+                    <div className="grid grid-cols-3 grid-rows-3 gap-1 w-16 h-16">
+                      <div />
+                      <button
+                        onClick={() => toggleEdge('top')}
+                        className={`rounded-sm transition-all ${activeEdges.top ? 'bg-neutral-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]' : 'bg-neutral-700 hover:bg-neutral-600'}`}
+                        title="Top Edge"
+                      />
+                      <div />
+                      <button
+                        onClick={() => toggleEdge('left')}
+                        className={`rounded-sm transition-all ${activeEdges.left ? 'bg-neutral-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]' : 'bg-neutral-700 hover:bg-neutral-600'}`}
+                        title="Left Edge"
+                      />
+                      <div className="bg-neutral-800 rounded-sm border border-neutral-600/50" />
+                      <button
+                        onClick={() => toggleEdge('right')}
+                        className={`rounded-sm transition-all ${activeEdges.right ? 'bg-neutral-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]' : 'bg-neutral-700 hover:bg-neutral-600'}`}
+                        title="Right Edge"
+                      />
+                      <div />
+                      <button
+                        onClick={() => toggleEdge('bottom')}
+                        className={`rounded-sm transition-all ${activeEdges.bottom ? 'bg-neutral-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]' : 'bg-neutral-700 hover:bg-neutral-600'}`}
+                        title="Bottom Edge"
+                      />
+                      <div />
+                    </div>
+                  </div>
+                </div>
+
+                {activeTool === 'cell-border' && (
+                  <div className="pt-2 border-t border-neutral-700/50 space-y-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Border Width (px)</label>
+                      <input
+                        type="number"
+                        min="1" max="20"
+                        value={currentCellBorderWidth}
+                        onChange={(e) => setCurrentCellBorderWidth(parseInt(e.target.value) || 1)}
+                        className="w-full px-3 py-2 glass-input"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Alignment</label>
+                      <div className="flex bg-neutral-900/50 p-1 rounded-lg border border-neutral-700/50">
+                        <button
+                          onClick={() => setCurrentCellBorderAlignment('inner')}
+                          className={`flex-1 py-1.5 text-[11px] font-semibold rounded-md transition-all ${currentCellBorderAlignment === 'inner' ? 'bg-neutral-500/20 text-neutral-400 shadow-sm' : 'text-neutral-400 hover:text-neutral-200'}`}
+                        >
+                          Inner
+                        </button>
+                        <button
+                          onClick={() => setCurrentCellBorderAlignment('center')}
+                          className={`flex-1 py-1.5 text-[11px] font-semibold rounded-md transition-all ${currentCellBorderAlignment === 'center' ? 'bg-neutral-500/20 text-neutral-400 shadow-sm' : 'text-neutral-400 hover:text-neutral-200'}`}
+                        >
+                          Center
+                        </button>
+                        <button
+                          onClick={() => setCurrentCellBorderAlignment('outer')}
+                          className={`flex-1 py-1.5 text-[11px] font-semibold rounded-md transition-all ${currentCellBorderAlignment === 'outer' ? 'bg-neutral-500/20 text-neutral-400 shadow-sm' : 'text-neutral-400 hover:text-neutral-200'}`}
+                        >
+                          Outer
+                        </button>
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Border Color</label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="color"
+                          value={currentCellBorderColor}
+                          onChange={(e) => setCurrentCellBorderColor(e.target.value)}
+                          className="w-8 h-8 rounded border-0 p-0 cursor-pointer bg-transparent"
+                        />
+                        <input
+                          type="text"
+                          value={currentCellBorderColor}
+                          onChange={(e) => setCurrentCellBorderColor(e.target.value)}
+                          className="w-full px-3 py-2 glass-input text-xs uppercase"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          
+          </div>
+        </div>
+      </aside>
     </div>
   );
 }
