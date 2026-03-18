@@ -78,13 +78,25 @@ const MemoizedCell = React.memo(({ rowIndex, colIndex, cellData, cellSize, lineT
       {/* Background Layer (Z-index 0) */}
       {cellData?.bgType === 'color' && cellData.bgValue && (
         <div
-          className="absolute inset-0 z-0"
-          style={{ backgroundColor: cellData.bgValue }}
+          className="absolute z-0"
+          style={{ 
+            backgroundColor: cellData.bgValue,
+            top: lineThickness === 0 ? '-0.5px' : 0,
+            left: lineThickness === 0 ? '-0.5px' : 0,
+            right: lineThickness === 0 ? '-0.5px' : 0,
+            bottom: lineThickness === 0 ? '-0.5px' : 0,
+          }}
         />
       )}
       {cellData?.bgType === 'svg' && cellData.bgValue && (
         <div
-          className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none overflow-hidden"
+          className="absolute z-0 flex items-center justify-center pointer-events-none overflow-hidden"
+          style={{ 
+            top: lineThickness === 0 ? '-0.5px' : 0,
+            left: lineThickness === 0 ? '-0.5px' : 0,
+            right: lineThickness === 0 ? '-0.5px' : 0,
+            bottom: lineThickness === 0 ? '-0.5px' : 0,
+          }}
           dangerouslySetInnerHTML={{ __html: cellData.bgValue }}
         />
       )}
