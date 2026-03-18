@@ -71,6 +71,7 @@ export default function GridManager({ onClose, onLoad }: GridManagerProps) {
                         onChange={(e) => setEditName(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleRename(grid.id, editName)}
                         className="glass-input flex-1 px-2 py-1 uppercase text-[10px] tracking-widest"
+                        aria-label="New grid name"
                       />
                       <button onClick={() => handleRename(grid.id, editName)} className="p-1 text-white hover:bg-neutral-800 transition-colors">
                         <Save className="w-4 h-4" />
