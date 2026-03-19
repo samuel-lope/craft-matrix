@@ -1398,7 +1398,7 @@ export default function App() {
                 <div
                   className="absolute inset-0 z-0 pointer-events-none box-border"
                   style={{
-                    border: `${gridState.externalMargin || 0}px solid ${gridState.externalMarginColor || '#ffffff'}`,
+                    border: `${(gridState.externalMargin || 0) + 1}px solid ${gridState.externalMarginColor || '#ffffff'}`,
                     opacity: gridState.externalMarginOpacity ?? 0,
                     borderRadius: '0px'
                   }}
