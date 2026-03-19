@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { Settings, MousePointer2, PaintBucket, Image as ImageIcon, Eraser, Download, Square, Library, FolderOpen, Save, Type, Grid, Layout } from 'lucide-react';
+import { Settings, MousePointer2, PaintBucket, Image as ImageIcon, Eraser, Download, Square, Library, FolderOpen, Save, Type, Grid, Layout, Plus, X, Pipette } from 'lucide-react';
 import * as htmlToImage from 'html-to-image';
 import { CellData, GridState, Tool, CellBorder, BorderAlignment, SavedAsset, SavedGrid } from './types';
 import AssetManager from './AssetManager';
@@ -349,6 +349,11 @@ export default function App() {
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [isSavePromptModalOpen, setIsSavePromptModalOpen] = useState(false);
   const [saveName, setSaveName] = useState('');
+  
+  // Inline Asset Add Form state
+  const [isAddingAsset, setIsAddingAsset] = useState(false);
+  const [newAssetValue, setNewAssetValue] = useState('');
+
   const [currentGridId, setCurrentGridId] = useState<string | null>(null);
   const [currentGridName, setCurrentGridName] = useState<string>('');
 
@@ -375,6 +380,45 @@ export default function App() {
   };
 
   const gridRef = useRef<HTMLDivElement>(null);
+
+  const handleDetectColorInline = async () => {
+    if (!('EyeDropper' in window)) {
+      alert('Seu navegador não suporta a função de detectar cores (EyeDropper API).');
+      return;
+    }
+    try {
+      const eyeDropper = new (window as any).EyeDropper();
+      const result = await eyeDropper.open();
+      setNewAssetValue(result.sRGBHex);
+    } catch (e) {
+      console.log('EyeDropper closed or failed', e);
+    }
+  };
+
+  const handleAddAssetSave = () => {
+    if (!newAssetValue.trim()) {
+      setIsAddingAsset(false);
+      return;
+    }
+    const newAsset: SavedAsset = {
+      id: Date.now().toString(),
+      name: `Added ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+      value: newAssetValue
+    };
+    if (activeTool === 'bg-color') {
+      setSavedColors(prev => [...prev, newAsset]);
+      setCurrentColor(newAsset.value);
+    } else if (activeTool === 'bg-svg') {
+      setSavedBgSvgs(prev => [...prev, newAsset]);
+      setCurrentBgSvg(newAsset.value);
+    } else if (activeTool === 'item-svg') {
+      setSavedItemSvgs(prev => [...prev, newAsset]);
+      setCurrentItemSvg(newAsset.value);
+    }
+    setIsAddingAsset(false);
+    setNewAssetValue('');
+  };
+
 
   const toolStateRef = useRef({
     activeTool,
@@ -833,6 +877,451 @@ export default function App() {
           <Eraser className="w-5 h-5" />
         </button>
       </aside>
+
+      {/* Secondary Left Sidebar (Tool Settings) */}
+      {(['bg-color', 'bg-svg', 'item-svg', 'label', 'cell-border'].includes(activeTool) || isEraserMode) && (
+        <aside className="w-72 bg-neutral-900 border-r border-neutral-800 z-10 flex flex-col shrink-0 shadow-2xl relative">
+          <div className="flex items-center gap-2 p-4 border-b border-neutral-800 bg-neutral-950">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-sky-400"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+            <h2 className="text-[10px] font-bold text-sky-400 uppercase tracking-widest">Tool Settings</h2>
+          </div>
+          <div className="p-4 overflow-y-auto custom-scrollbar flex-1">
+          <div className="px-1">
+            {isEraserMode ? (
+              <div className="text-[10px] uppercase tracking-widest text-neutral-500 font-bold p-3 text-center border border-dashed border-neutral-800 rounded-lg">
+                Eraser Mode Active<br/>
+                <span className="text-rose-400 mt-1 block">Erasing {
+                  activeTool === 'bg-color' || activeTool === 'bg-svg' ? 'Backgrounds' :
+                  activeTool === 'item-svg' ? 'Items' :
+                  activeTool === 'label' ? 'Labels' :
+                  activeTool === 'cell-border' ? 'Borders' : 'Content'
+                }</span>
+              </div>
+            ) : (
+              <>
+                {activeTool === 'bg-color' && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Select Color</label>
+                  <div className="flex gap-2">
+                    <button onClick={() => { setIsAddingAsset(!isAddingAsset); setNewAssetValue('#ffffff') }} className="text-neutral-400 hover:text-white transition-colors" title="Add Color">
+                      {isAddingAsset ? <X size={14} /> : <Plus size={14} />}
+                    </button>
+                    <button onClick={() => setShowAssetManager(true)} className="text-[10px] text-neutral-400 hover:text-neutral-300 font-medium uppercase tracking-wider transition-colors">Manage</button>
+                  </div>
+                </div>
+                
+                {isAddingAsset ? (
+                  <div className="space-y-3 bg-neutral-950 p-3 rounded border border-neutral-800">
+                    <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-2">Add New Color</div>
+                    {('EyeDropper' in window) && (
+                      <button onClick={handleDetectColorInline} className="w-full flex items-center justify-center gap-2 h-8 bg-neutral-900 hover:bg-neutral-800 text-neutral-300 hover:text-white rounded border border-neutral-800 transition-colors text-[10px] font-bold uppercase tracking-widest">
+                        <Pipette size={14} /> Detect Color
+                      </button>
+                    )}
+                    <div className="flex h-8 bg-black border border-neutral-800 rounded focus-within:ring-1 focus-within:ring-white transition-all overflow-hidden">
+                      <input
+                        type="color"
+                        value={newAssetValue || '#000000'}
+                        onChange={(e) => setNewAssetValue(e.target.value)}
+                        className="w-8 h-full p-0 border-0 cursor-pointer seamless-color"
+                      />
+                      <input
+                        type="text"
+                        value={newAssetValue}
+                        onChange={(e) => setNewAssetValue(e.target.value)}
+                        placeholder="#HEX"
+                        className="flex-1 bg-transparent border-0 px-2 text-xs font-mono text-neutral-300 focus:outline-none"
+                      />
+                    </div>
+                    <button onClick={handleAddAssetSave} className="w-full h-8 bg-white hover:bg-neutral-200 text-black text-[10px] font-bold uppercase tracking-widest rounded transition-colors" disabled={!newAssetValue.trim()}>
+                      Save
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-4 gap-2">
+                    {savedColors.map(color => (
+                      <button
+                        key={color.id}
+                        onClick={() => setCurrentColor(color.value)}
+                        className={`h-8 rounded-md border transition-all ${currentColor === color.value ? 'ring-2 ring-neutral-500 ring-offset-2 ring-offset-neutral-900 border-transparent scale-110 shadow-lg' : 'border-neutral-600/50 hover:border-neutral-400 hover:scale-105'}`}
+                        style={{ backgroundColor: color.value }}
+                        title={color.name}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTool === 'bg-svg' && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Select Background SVG</label>
+                  <div className="flex gap-2">
+                    <button onClick={() => { setIsAddingAsset(!isAddingAsset); setNewAssetValue('') }} className="text-neutral-400 hover:text-white transition-colors" title="Add SVG">
+                      {isAddingAsset ? <X size={14} /> : <Plus size={14} />}
+                    </button>
+                    <button onClick={() => setShowAssetManager(true)} className="text-[10px] text-neutral-400 hover:text-neutral-300 font-medium uppercase tracking-wider transition-colors">Manage</button>
+                  </div>
+                </div>
+
+                {isAddingAsset ? (
+                  <div className="space-y-3 bg-neutral-950 p-3 rounded border border-neutral-800">
+                    <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-2">Add New SVG</div>
+                    <textarea
+                      value={newAssetValue}
+                      onChange={(e) => setNewAssetValue(e.target.value)}
+                      placeholder="Paste SVG code here..."
+                      className="w-full h-24 bg-black border border-neutral-800 rounded p-2 text-xs font-mono text-neutral-300 focus:outline-none focus:ring-1 focus:ring-white transition-all custom-scrollbar resize-none"
+                    />
+                    <button onClick={handleAddAssetSave} className="w-full h-8 bg-white hover:bg-neutral-200 text-black text-[10px] font-bold uppercase tracking-widest rounded transition-colors" disabled={!newAssetValue.trim()}>
+                      Save
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-3 gap-2">
+                    {savedBgSvgs.map(svg => (
+                      <button
+                        key={svg.id}
+                        onClick={() => setCurrentBgSvg(svg.value)}
+                        className={`h-12 rounded-md border flex items-center justify-center overflow-hidden transition-all bg-neutral-800 ${currentBgSvg === svg.value ? 'ring-2 ring-neutral-500 ring-offset-2 ring-offset-neutral-900 border-transparent shadow-lg' : 'border-neutral-600/50 hover:border-neutral-400'}`}
+                        title={svg.name}
+                        dangerouslySetInnerHTML={{ __html: svg.value }}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          {activeTool === 'item-svg' && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Select Item SVG</label>
+                  <div className="flex gap-2">
+                    <button onClick={() => { setIsAddingAsset(!isAddingAsset); setNewAssetValue('') }} className="text-neutral-400 hover:text-white transition-colors" title="Add SVG">
+                      {isAddingAsset ? <X size={14} /> : <Plus size={14} />}
+                    </button>
+                    <button onClick={() => setShowAssetManager(true)} className="text-[10px] text-neutral-400 hover:text-neutral-300 font-medium uppercase tracking-wider transition-colors">Manage</button>
+                  </div>
+                </div>
+
+                {isAddingAsset ? (
+                  <div className="space-y-3 bg-neutral-950 p-3 rounded border border-neutral-800">
+                    <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-2">Add New SVG</div>
+                    <textarea
+                      value={newAssetValue}
+                      onChange={(e) => setNewAssetValue(e.target.value)}
+                      placeholder="Paste SVG code here..."
+                      className="w-full h-24 bg-black border border-neutral-800 rounded p-2 text-xs font-mono text-neutral-300 focus:outline-none focus:ring-1 focus:ring-white transition-all custom-scrollbar resize-none"
+                    />
+                    <button onClick={handleAddAssetSave} className="w-full h-8 bg-white hover:bg-neutral-200 text-black text-[10px] font-bold uppercase tracking-widest rounded transition-colors" disabled={!newAssetValue.trim()}>
+                      Save
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-3 gap-2">
+                    {savedItemSvgs.map(svg => (
+                      <button
+                        key={svg.id}
+                        onClick={() => setCurrentItemSvg(svg.value)}
+                        className={`h-12 rounded-md border flex items-center justify-center overflow-hidden transition-all bg-neutral-800 ${currentItemSvg === svg.value ? 'ring-2 ring-neutral-500 ring-offset-2 ring-offset-neutral-900 border-transparent shadow-lg' : 'border-neutral-600/50 hover:border-neutral-400'}`}
+                        title={svg.name}
+                        dangerouslySetInnerHTML={{ __html: svg.value }}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          {activeTool === 'label' && (
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Label Text</label>
+                  <input
+                    type="text"
+                    value={currentLabelText}
+                    onChange={(e) => setCurrentLabelText(e.target.value)}
+                    placeholder="E.g. Room 1"
+                    className="w-full px-3 py-2 glass-input"
+                  />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3 mt-2">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Font Select</label>
+                    <select
+                      value={currentLabelFont}
+                      onChange={(e) => setCurrentLabelFont(e.target.value)}
+                      className="w-full px-2 py-2 glass-input text-xs"
+                    >
+                      <option value="Inter, sans-serif">Inter</option>
+                      <option value="Arial, sans-serif">Arial</option>
+                      <option value="'Courier New', Courier, monospace">Courier New</option>
+                      <option value="'Times New Roman', Times, serif">Times New</option>
+                      <option value="'Comic Sans MS', cursive, sans-serif">Comic Sans</option>
+                      <option value="'Georgia', serif">Georgia</option>
+                       <option value="'Trebuchet MS', sans-serif">Trebuchet</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Size (px)</label>
+                    <input
+                      type="number"
+                      min="8" max="100"
+                      value={currentLabelSize}
+                      onChange={(e) => setCurrentLabelSize(parseInt(e.target.value) || 12)}
+                      className="w-full px-3 py-2 glass-input"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5 mt-2">
+                  <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Alignment</label>
+                  <div className="flex bg-neutral-900/50 p-1 rounded-lg border border-neutral-700/50">
+                    <button
+                      onClick={() => setCurrentLabelAlign('start')}
+                      className={`flex-1 py-1.5 text-[11px] font-semibold rounded-md transition-all ${currentLabelAlign === 'start' ? 'bg-neutral-500/20 text-neutral-400 shadow-sm' : 'text-neutral-400 hover:text-neutral-200'}`}
+                    >
+                      Start
+                    </button>
+                    <button
+                      onClick={() => setCurrentLabelAlign('center')}
+                      className={`flex-1 py-1.5 text-[11px] font-semibold rounded-md transition-all ${currentLabelAlign === 'center' ? 'bg-neutral-500/20 text-neutral-400 shadow-sm' : 'text-neutral-400 hover:text-neutral-200'}`}
+                    >
+                      Center
+                    </button>
+                    <button
+                      onClick={() => setCurrentLabelAlign('end')}
+                      className={`flex-1 py-1.5 text-[11px] font-semibold rounded-md transition-all ${currentLabelAlign === 'end' ? 'bg-neutral-500/20 text-neutral-400 shadow-sm' : 'text-neutral-400 hover:text-neutral-200'}`}
+                    >
+                      End
+                    </button>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-neutral-800">
+                  <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Text Color</label>
+                  <div className="flex h-8 bg-black border border-neutral-800 rounded-sm focus-within:ring-1 focus-within:ring-white transition-all overflow-hidden">
+                    <input
+                      type="color"
+                      value={currentLabelColor}
+                      onChange={(e) => setCurrentLabelColor(e.target.value)}
+                      className="w-10 h-full p-0 border-0 cursor-pointer seamless-color shrink-0 bg-transparent"
+                    />
+                    <div className="w-px h-full bg-neutral-800 shrink-0" />
+                    <input
+                      type="text"
+                      value={currentLabelColor}
+                      onChange={(e) => setCurrentLabelColor(e.target.value)}
+                      className="flex-1 w-full bg-transparent border-0 px-2 text-[10px] font-bold text-neutral-200 outline-none uppercase tracking-widest"
+                    />
+                  </div>
+                </div>
+
+                {/* Label Frame / Background */}
+                <div className="pt-4 border-t border-neutral-800 space-y-4">
+                  <label className="flex items-center gap-2 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={currentLabelFrameEnabled}
+                      onChange={(e) => setCurrentLabelFrameEnabled(e.target.checked)}
+                      className="w-4 h-4 accent-white cursor-pointer"
+                    />
+                    <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Label Frame</span>
+                  </label>
+
+                  {currentLabelFrameEnabled && (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Fill Color</label>
+                          <div className="flex h-8 bg-black border border-neutral-800 rounded-sm focus-within:ring-1 focus-within:ring-white transition-all overflow-hidden">
+                            <input
+                              type="color"
+                              value={currentLabelFrameBgColor}
+                              onChange={(e) => setCurrentLabelFrameBgColor(e.target.value)}
+                              className="w-10 h-full p-0 border-0 cursor-pointer seamless-color shrink-0 bg-transparent"
+                            />
+                            <div className="w-px h-full bg-neutral-800 shrink-0" />
+                            <input
+                              type="text"
+                              value={currentLabelFrameBgColor}
+                              onChange={(e) => setCurrentLabelFrameBgColor(e.target.value)}
+                              className="flex-1 w-full bg-transparent border-0 px-2 text-[10px] font-bold text-neutral-200 outline-none uppercase tracking-widest"
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Fill Opacity (%)</label>
+                          <input
+                            type="number"
+                            min="0" max="100"
+                            value={Math.round(currentLabelFrameBgOpacity * 100)}
+                            onChange={(e) => {
+                              const val = Math.max(0, Math.min(100, parseInt(e.target.value) || 0));
+                              setCurrentLabelFrameBgOpacity(val / 100);
+                            }}
+                            className="w-full h-8 px-3 bg-black border border-neutral-800 text-[10px] font-bold text-neutral-200 outline-none focus:border-white focus:ring-1 focus:ring-white transition-all"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Border Color</label>
+                          <div className="flex h-8 bg-black border border-neutral-800 rounded-sm focus-within:ring-1 focus-within:ring-white transition-all overflow-hidden">
+                            <input
+                              type="color"
+                              value={currentLabelFrameBorderColor}
+                              onChange={(e) => setCurrentLabelFrameBorderColor(e.target.value)}
+                              className="w-10 h-full p-0 border-0 cursor-pointer seamless-color shrink-0 bg-transparent"
+                            />
+                            <div className="w-px h-full bg-neutral-800 shrink-0" />
+                            <input
+                              type="text"
+                              value={currentLabelFrameBorderColor}
+                              onChange={(e) => setCurrentLabelFrameBorderColor(e.target.value)}
+                              className="flex-1 w-full bg-transparent border-0 px-2 text-[10px] font-bold text-neutral-200 outline-none uppercase tracking-widest"
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Border Width</label>
+                          <input
+                            type="number"
+                            min="0" max="20"
+                            value={currentLabelFrameBorderWidth}
+                            onChange={(e) => setCurrentLabelFrameBorderWidth(parseInt(e.target.value) || 0)}
+                            className="w-full h-8 px-3 bg-black border border-neutral-800 text-[10px] font-bold text-neutral-200 outline-none focus:border-white focus:ring-1 focus:ring-white transition-all"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Radius (px)</label>
+                          <input
+                            type="number"
+                            min="0" max="100"
+                            value={currentLabelFrameRadius}
+                            onChange={(e) => setCurrentLabelFrameRadius(parseInt(e.target.value) || 0)}
+                            className="w-full h-8 px-3 bg-black border border-neutral-800 text-[10px] font-bold text-neutral-200 outline-none focus:border-white focus:ring-1 focus:ring-white transition-all"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Padding (px)</label>
+                          <input
+                            type="number"
+                            min="0" max="50"
+                            value={currentLabelFramePadding}
+                            onChange={(e) => setCurrentLabelFramePadding(parseInt(e.target.value) || 0)}
+                            className="w-full h-8 px-3 bg-black border border-neutral-800 text-[10px] font-bold text-neutral-200 outline-none focus:border-white focus:ring-1 focus:ring-white transition-all"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          {activeTool === 'cell-border' && (
+              <div className="space-y-5">
+                <div className="space-y-3">
+                  <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider text-center block">Edges to Apply/Erase</label>
+                  <div className="flex justify-center items-center gap-1 p-3 bg-neutral-900/50 rounded-xl border border-neutral-700/50 w-fit mx-auto shadow-inner">
+                    <div className="grid grid-cols-3 grid-rows-3 gap-1 w-16 h-16">
+                      <div />
+                      <button
+                        onClick={() => toggleEdge('top')}
+                        className={`rounded-sm transition-all ${activeEdges.top ? 'bg-neutral-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]' : 'bg-neutral-700 hover:bg-neutral-600'}`}
+                        title="Top Edge"
+                      />
+                      <div />
+                      <button
+                        onClick={() => toggleEdge('left')}
+                        className={`rounded-sm transition-all ${activeEdges.left ? 'bg-neutral-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]' : 'bg-neutral-700 hover:bg-neutral-600'}`}
+                        title="Left Edge"
+                      />
+                      <div className="bg-neutral-800 rounded-sm border border-neutral-600/50" />
+                      <button
+                        onClick={() => toggleEdge('right')}
+                        className={`rounded-sm transition-all ${activeEdges.right ? 'bg-neutral-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]' : 'bg-neutral-700 hover:bg-neutral-600'}`}
+                        title="Right Edge"
+                      />
+                      <div />
+                      <button
+                        onClick={() => toggleEdge('bottom')}
+                        className={`rounded-sm transition-all ${activeEdges.bottom ? 'bg-neutral-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]' : 'bg-neutral-700 hover:bg-neutral-600'}`}
+                        title="Bottom Edge"
+                      />
+                      <div />
+                    </div>
+                  </div>
+                </div>
+
+                {activeTool === 'cell-border' && (
+                  <div className="pt-2 border-t border-neutral-700/50 space-y-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Border Width (px)</label>
+                      <input
+                        type="number"
+                        min="1" max="20"
+                        value={currentCellBorderWidth}
+                        onChange={(e) => setCurrentCellBorderWidth(parseInt(e.target.value) || 1)}
+                        className="w-full px-3 py-2 glass-input"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Alignment</label>
+                      <div className="flex bg-neutral-900/50 p-1 rounded-lg border border-neutral-700/50">
+                        <button
+                          onClick={() => setCurrentCellBorderAlignment('inner')}
+                          className={`flex-1 py-1.5 text-[11px] font-semibold rounded-md transition-all ${currentCellBorderAlignment === 'inner' ? 'bg-neutral-500/20 text-neutral-400 shadow-sm' : 'text-neutral-400 hover:text-neutral-200'}`}
+                        >
+                          Inner
+                        </button>
+                        <button
+                          onClick={() => setCurrentCellBorderAlignment('center')}
+                          className={`flex-1 py-1.5 text-[11px] font-semibold rounded-md transition-all ${currentCellBorderAlignment === 'center' ? 'bg-neutral-500/20 text-neutral-400 shadow-sm' : 'text-neutral-400 hover:text-neutral-200'}`}
+                        >
+                          Center
+                        </button>
+                        <button
+                          onClick={() => setCurrentCellBorderAlignment('outer')}
+                          className={`flex-1 py-1.5 text-[11px] font-semibold rounded-md transition-all ${currentCellBorderAlignment === 'outer' ? 'bg-neutral-500/20 text-neutral-400 shadow-sm' : 'text-neutral-400 hover:text-neutral-200'}`}
+                        >
+                          Outer
+                        </button>
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Border Color</label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="color"
+                          value={currentCellBorderColor}
+                          onChange={(e) => setCurrentCellBorderColor(e.target.value)}
+                          className="w-8 h-8 rounded border-0 p-0 cursor-pointer bg-transparent"
+                        />
+                        <input
+                          type="text"
+                          value={currentCellBorderColor}
+                          onChange={(e) => setCurrentCellBorderColor(e.target.value)}
+                          className="w-full px-3 py-2 glass-input text-xs uppercase"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            </>
+          )}
+          </div>
+          </div>
+        </aside>
+      )}
 
       {/* Main Grid Area */}
       <main className="flex-1 flex flex-col min-w-0 bg-neutral-950">
@@ -1427,368 +1916,6 @@ export default function App() {
 
           
           
-          {/* Active Tool Properties */}
-          <div className="w-full h-px bg-neutral-800 my-6" />
-          <h2 className="text-[10px] font-bold text-sky-400 uppercase tracking-widest px-1 mb-4 flex items-center gap-2">
-            <Settings className="w-3.5 h-3.5" />
-            Tool Settings
-          </h2>
-          <div className="px-1">
-            {isEraserMode ? (
-              <div className="text-[10px] uppercase tracking-widest text-neutral-500 font-bold p-3 text-center border border-dashed border-neutral-800 rounded-lg">
-                Eraser Mode Active<br/>
-                <span className="text-rose-400 mt-1 block">Erasing {
-                  activeTool === 'bg-color' || activeTool === 'bg-svg' ? 'Backgrounds' :
-                  activeTool === 'item-svg' ? 'Items' :
-                  activeTool === 'label' ? 'Labels' :
-                  activeTool === 'cell-border' ? 'Borders' : 'Content'
-                }</span>
-              </div>
-            ) : (
-              <>
-                {activeTool === 'bg-color' && (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Select Color</label>
-                  <button onClick={() => setShowAssetManager(true)} className="text-[10px] text-neutral-400 hover:text-neutral-300 font-medium uppercase tracking-wider transition-colors">Manage</button>
-                </div>
-                <div className="grid grid-cols-4 gap-2">
-                  {savedColors.map(color => (
-                    <button
-                      key={color.id}
-                      onClick={() => setCurrentColor(color.value)}
-                      className={`h-8 rounded-md border transition-all ${currentColor === color.value ? 'ring-2 ring-neutral-500 ring-offset-2 ring-offset-neutral-900 border-transparent scale-110 shadow-lg' : 'border-neutral-600/50 hover:border-neutral-400 hover:scale-105'}`}
-                      style={{ backgroundColor: color.value }}
-                      title={color.name}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {activeTool === 'bg-svg' && (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Select Background SVG</label>
-                  <button onClick={() => setShowAssetManager(true)} className="text-[10px] text-neutral-400 hover:text-neutral-300 font-medium uppercase tracking-wider transition-colors">Manage</button>
-                </div>
-                <div className="grid grid-cols-3 gap-2">
-                  {savedBgSvgs.map(svg => (
-                    <button
-                      key={svg.id}
-                      onClick={() => setCurrentBgSvg(svg.value)}
-                      className={`h-12 rounded-md border flex items-center justify-center overflow-hidden transition-all bg-neutral-800 ${currentBgSvg === svg.value ? 'ring-2 ring-neutral-500 ring-offset-2 ring-offset-neutral-900 border-transparent shadow-lg' : 'border-neutral-600/50 hover:border-neutral-400'}`}
-                      title={svg.name}
-                      dangerouslySetInnerHTML={{ __html: svg.value }}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-          {activeTool === 'item-svg' && (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Select Item SVG</label>
-                  <button onClick={() => setShowAssetManager(true)} className="text-[10px] text-neutral-400 hover:text-neutral-300 font-medium uppercase tracking-wider transition-colors">Manage</button>
-                </div>
-                <div className="grid grid-cols-3 gap-2">
-                  {savedItemSvgs.map(svg => (
-                    <button
-                      key={svg.id}
-                      onClick={() => setCurrentItemSvg(svg.value)}
-                      className={`h-12 rounded-md border flex items-center justify-center overflow-hidden transition-all bg-neutral-800 ${currentItemSvg === svg.value ? 'ring-2 ring-neutral-500 ring-offset-2 ring-offset-neutral-900 border-transparent shadow-lg' : 'border-neutral-600/50 hover:border-neutral-400'}`}
-                      title={svg.name}
-                      dangerouslySetInnerHTML={{ __html: svg.value }}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-          {activeTool === 'label' && (
-              <div className="space-y-4">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Label Text</label>
-                  <input
-                    type="text"
-                    value={currentLabelText}
-                    onChange={(e) => setCurrentLabelText(e.target.value)}
-                    placeholder="E.g. Room 1"
-                    className="w-full px-3 py-2 glass-input"
-                  />
-                </div>
-                
-                <div className="grid grid-cols-2 gap-3 mt-2">
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Font Select</label>
-                    <select
-                      value={currentLabelFont}
-                      onChange={(e) => setCurrentLabelFont(e.target.value)}
-                      className="w-full px-2 py-2 glass-input text-xs"
-                    >
-                      <option value="Inter, sans-serif">Inter</option>
-                      <option value="Arial, sans-serif">Arial</option>
-                      <option value="'Courier New', Courier, monospace">Courier New</option>
-                      <option value="'Times New Roman', Times, serif">Times New</option>
-                      <option value="'Comic Sans MS', cursive, sans-serif">Comic Sans</option>
-                      <option value="'Georgia', serif">Georgia</option>
-                       <option value="'Trebuchet MS', sans-serif">Trebuchet</option>
-                    </select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Size (px)</label>
-                    <input
-                      type="number"
-                      min="8" max="100"
-                      value={currentLabelSize}
-                      onChange={(e) => setCurrentLabelSize(parseInt(e.target.value) || 12)}
-                      className="w-full px-3 py-2 glass-input"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1.5 mt-2">
-                  <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Alignment</label>
-                  <div className="flex bg-neutral-900/50 p-1 rounded-lg border border-neutral-700/50">
-                    <button
-                      onClick={() => setCurrentLabelAlign('start')}
-                      className={`flex-1 py-1.5 text-[11px] font-semibold rounded-md transition-all ${currentLabelAlign === 'start' ? 'bg-neutral-500/20 text-neutral-400 shadow-sm' : 'text-neutral-400 hover:text-neutral-200'}`}
-                    >
-                      Start
-                    </button>
-                    <button
-                      onClick={() => setCurrentLabelAlign('center')}
-                      className={`flex-1 py-1.5 text-[11px] font-semibold rounded-md transition-all ${currentLabelAlign === 'center' ? 'bg-neutral-500/20 text-neutral-400 shadow-sm' : 'text-neutral-400 hover:text-neutral-200'}`}
-                    >
-                      Center
-                    </button>
-                    <button
-                      onClick={() => setCurrentLabelAlign('end')}
-                      className={`flex-1 py-1.5 text-[11px] font-semibold rounded-md transition-all ${currentLabelAlign === 'end' ? 'bg-neutral-500/20 text-neutral-400 shadow-sm' : 'text-neutral-400 hover:text-neutral-200'}`}
-                    >
-                      End
-                    </button>
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t border-neutral-800">
-                  <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Text Color</label>
-                  <div className="flex h-8 bg-black border border-neutral-800 rounded-sm focus-within:ring-1 focus-within:ring-white transition-all overflow-hidden">
-                    <input
-                      type="color"
-                      value={currentLabelColor}
-                      onChange={(e) => setCurrentLabelColor(e.target.value)}
-                      className="w-10 h-full p-0 border-0 cursor-pointer seamless-color shrink-0 bg-transparent"
-                    />
-                    <div className="w-px h-full bg-neutral-800 shrink-0" />
-                    <input
-                      type="text"
-                      value={currentLabelColor}
-                      onChange={(e) => setCurrentLabelColor(e.target.value)}
-                      className="flex-1 w-full bg-transparent border-0 px-2 text-[10px] font-bold text-neutral-200 outline-none uppercase tracking-widest"
-                    />
-                  </div>
-                </div>
-
-                {/* Label Frame / Background */}
-                <div className="pt-4 border-t border-neutral-800 space-y-4">
-                  <label className="flex items-center gap-2 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={currentLabelFrameEnabled}
-                      onChange={(e) => setCurrentLabelFrameEnabled(e.target.checked)}
-                      className="w-4 h-4 accent-white cursor-pointer"
-                    />
-                    <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Label Frame</span>
-                  </label>
-
-                  {currentLabelFrameEnabled && (
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Fill Color</label>
-                          <div className="flex h-8 bg-black border border-neutral-800 rounded-sm focus-within:ring-1 focus-within:ring-white transition-all overflow-hidden">
-                            <input
-                              type="color"
-                              value={currentLabelFrameBgColor}
-                              onChange={(e) => setCurrentLabelFrameBgColor(e.target.value)}
-                              className="w-10 h-full p-0 border-0 cursor-pointer seamless-color shrink-0 bg-transparent"
-                            />
-                            <div className="w-px h-full bg-neutral-800 shrink-0" />
-                            <input
-                              type="text"
-                              value={currentLabelFrameBgColor}
-                              onChange={(e) => setCurrentLabelFrameBgColor(e.target.value)}
-                              className="flex-1 w-full bg-transparent border-0 px-2 text-[10px] font-bold text-neutral-200 outline-none uppercase tracking-widest"
-                            />
-                          </div>
-                        </div>
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Fill Opacity (%)</label>
-                          <input
-                            type="number"
-                            min="0" max="100"
-                            value={Math.round(currentLabelFrameBgOpacity * 100)}
-                            onChange={(e) => {
-                              const val = Math.max(0, Math.min(100, parseInt(e.target.value) || 0));
-                              setCurrentLabelFrameBgOpacity(val / 100);
-                            }}
-                            className="w-full h-8 px-3 bg-black border border-neutral-800 text-[10px] font-bold text-neutral-200 outline-none focus:border-white focus:ring-1 focus:ring-white transition-all"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Border Color</label>
-                          <div className="flex h-8 bg-black border border-neutral-800 rounded-sm focus-within:ring-1 focus-within:ring-white transition-all overflow-hidden">
-                            <input
-                              type="color"
-                              value={currentLabelFrameBorderColor}
-                              onChange={(e) => setCurrentLabelFrameBorderColor(e.target.value)}
-                              className="w-10 h-full p-0 border-0 cursor-pointer seamless-color shrink-0 bg-transparent"
-                            />
-                            <div className="w-px h-full bg-neutral-800 shrink-0" />
-                            <input
-                              type="text"
-                              value={currentLabelFrameBorderColor}
-                              onChange={(e) => setCurrentLabelFrameBorderColor(e.target.value)}
-                              className="flex-1 w-full bg-transparent border-0 px-2 text-[10px] font-bold text-neutral-200 outline-none uppercase tracking-widest"
-                            />
-                          </div>
-                        </div>
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Border Width</label>
-                          <input
-                            type="number"
-                            min="0" max="20"
-                            value={currentLabelFrameBorderWidth}
-                            onChange={(e) => setCurrentLabelFrameBorderWidth(parseInt(e.target.value) || 0)}
-                            className="w-full h-8 px-3 bg-black border border-neutral-800 text-[10px] font-bold text-neutral-200 outline-none focus:border-white focus:ring-1 focus:ring-white transition-all"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Radius (px)</label>
-                          <input
-                            type="number"
-                            min="0" max="100"
-                            value={currentLabelFrameRadius}
-                            onChange={(e) => setCurrentLabelFrameRadius(parseInt(e.target.value) || 0)}
-                            className="w-full h-8 px-3 bg-black border border-neutral-800 text-[10px] font-bold text-neutral-200 outline-none focus:border-white focus:ring-1 focus:ring-white transition-all"
-                          />
-                        </div>
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Padding (px)</label>
-                          <input
-                            type="number"
-                            min="0" max="50"
-                            value={currentLabelFramePadding}
-                            onChange={(e) => setCurrentLabelFramePadding(parseInt(e.target.value) || 0)}
-                            className="w-full h-8 px-3 bg-black border border-neutral-800 text-[10px] font-bold text-neutral-200 outline-none focus:border-white focus:ring-1 focus:ring-white transition-all"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          {activeTool === 'cell-border' && (
-              <div className="space-y-5">
-                <div className="space-y-3">
-                  <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider text-center block">Edges to Apply/Erase</label>
-                  <div className="flex justify-center items-center gap-1 p-3 bg-neutral-900/50 rounded-xl border border-neutral-700/50 w-fit mx-auto shadow-inner">
-                    <div className="grid grid-cols-3 grid-rows-3 gap-1 w-16 h-16">
-                      <div />
-                      <button
-                        onClick={() => toggleEdge('top')}
-                        className={`rounded-sm transition-all ${activeEdges.top ? 'bg-neutral-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]' : 'bg-neutral-700 hover:bg-neutral-600'}`}
-                        title="Top Edge"
-                      />
-                      <div />
-                      <button
-                        onClick={() => toggleEdge('left')}
-                        className={`rounded-sm transition-all ${activeEdges.left ? 'bg-neutral-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]' : 'bg-neutral-700 hover:bg-neutral-600'}`}
-                        title="Left Edge"
-                      />
-                      <div className="bg-neutral-800 rounded-sm border border-neutral-600/50" />
-                      <button
-                        onClick={() => toggleEdge('right')}
-                        className={`rounded-sm transition-all ${activeEdges.right ? 'bg-neutral-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]' : 'bg-neutral-700 hover:bg-neutral-600'}`}
-                        title="Right Edge"
-                      />
-                      <div />
-                      <button
-                        onClick={() => toggleEdge('bottom')}
-                        className={`rounded-sm transition-all ${activeEdges.bottom ? 'bg-neutral-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]' : 'bg-neutral-700 hover:bg-neutral-600'}`}
-                        title="Bottom Edge"
-                      />
-                      <div />
-                    </div>
-                  </div>
-                </div>
-
-                {activeTool === 'cell-border' && (
-                  <div className="pt-2 border-t border-neutral-700/50 space-y-4">
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Border Width (px)</label>
-                      <input
-                        type="number"
-                        min="1" max="20"
-                        value={currentCellBorderWidth}
-                        onChange={(e) => setCurrentCellBorderWidth(parseInt(e.target.value) || 1)}
-                        className="w-full px-3 py-2 glass-input"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Alignment</label>
-                      <div className="flex bg-neutral-900/50 p-1 rounded-lg border border-neutral-700/50">
-                        <button
-                          onClick={() => setCurrentCellBorderAlignment('inner')}
-                          className={`flex-1 py-1.5 text-[11px] font-semibold rounded-md transition-all ${currentCellBorderAlignment === 'inner' ? 'bg-neutral-500/20 text-neutral-400 shadow-sm' : 'text-neutral-400 hover:text-neutral-200'}`}
-                        >
-                          Inner
-                        </button>
-                        <button
-                          onClick={() => setCurrentCellBorderAlignment('center')}
-                          className={`flex-1 py-1.5 text-[11px] font-semibold rounded-md transition-all ${currentCellBorderAlignment === 'center' ? 'bg-neutral-500/20 text-neutral-400 shadow-sm' : 'text-neutral-400 hover:text-neutral-200'}`}
-                        >
-                          Center
-                        </button>
-                        <button
-                          onClick={() => setCurrentCellBorderAlignment('outer')}
-                          className={`flex-1 py-1.5 text-[11px] font-semibold rounded-md transition-all ${currentCellBorderAlignment === 'outer' ? 'bg-neutral-500/20 text-neutral-400 shadow-sm' : 'text-neutral-400 hover:text-neutral-200'}`}
-                        >
-                          Outer
-                        </button>
-                      </div>
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Border Color</label>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="color"
-                          value={currentCellBorderColor}
-                          onChange={(e) => setCurrentCellBorderColor(e.target.value)}
-                          className="w-8 h-8 rounded border-0 p-0 cursor-pointer bg-transparent"
-                        />
-                        <input
-                          type="text"
-                          value={currentCellBorderColor}
-                          onChange={(e) => setCurrentCellBorderColor(e.target.value)}
-                          className="w-full px-3 py-2 glass-input text-xs uppercase"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-            </>
-          )}
-          </div>
         </div>
       </aside>
     </div>
