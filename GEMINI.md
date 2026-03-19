@@ -86,8 +86,10 @@ As ferramentas operam sob a lógica do "clique na célula". A ferramenta selecio
 - **Unified Eraser Tool**: Botão universal de "Erase Mode" configurável por contexto. Quando ativo, atua apagando a camada (Layer) referente à ferramenta recém ativada (Background, Item, Label, Borders), simplificando a interface.
 - **General Tools**: Ferramenta `Pointer` (não faz nada na célula) e ferramenta para apagar todo o conteúdo de uma célula de vez (`Eraser Area`). Há também botão para limpar a grade completa.
 
+*Nota: As configurações de cada ferramenta (Tool Settings) ficam ancoradas num painel secundário do lado esquerdo para manter a dinâmica do uso. Ferramentas providas de inputs de cor ou SVG incluem atalhos em mini-formulários abertos via botão `+` que possibilitam adicionar novos ativos de modo totalmente imediato com suporte à função EyeDropper (Conta-Gotas), dispensando sair do contexto atual para gerenciar Assets nativamente.*
+
 ### 3. Gerenciamento (Managers)
-- **Manage Assets**: Fica num modal dedicado (Asset Manager) para salvar strings de código hexagonal (cores), código limpo SVG para fundos, e código limpo SVG para itens. Suporta adição, edição, exclusão e visualização prévia. Inclui a ferramenta **Detectar Cor**, que utiliza a EyeDropper API para capturar cores diretamente da tela do usuário.
+- **Manage Assets**: Fica num modal dedicado (Asset Manager) para exclusão em massa, verificação e edição de strings de código hexagonal (cores), código limpo SVG para fundos, e código limpo SVG para itens. *Inclusões atômicas são preferencialmente geradas dinamicamente dentro dos atalhos inline descritos na seção Tool Settings.*
 - **Manage Saved Grids**: Fica num modal dedicado (Grid Manager) garantindo o salvamento progressivo e versionado da grade no `LocalStorage`. Suporta as funções Overwrite, Save As New, Restore (Load), Rename e Delete.
 
 ### 4. Exportação do Trabalho
