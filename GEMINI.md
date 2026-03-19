@@ -79,11 +79,12 @@ Abaixo está o detalhamento estruturado em JSON de todos os elementos e parâmet
 
 ### 2. Ferramentas de Interação (Tools)
 As ferramentas operam sob a lógica do "clique na célula". A ferramenta selecionada dita o que ocorre ao clicar numa célula:
-- **Background Tools**: Permitem Pintar cor sólida (`bg-color`), colocar um SVG em código (`bg-svg`) de redimensionamento em 100% sob a célula, ou então apagar (`bg-eraser`) a camada plana.
-- **Item Tools**: Permitem Inserir um SVG em código (`item-svg`) que flutua acima do background ou apagar (`item-eraser`) tal item.
-- **Label Tools**: Permite inserir texto (`label`) com tipografia editável (fonte, tamanho, cor e alinhamento: start, center, end). Inclui suporte a moldura (frame) configurável com cor de fundo, opacidade, borda, raio e preenchimento. Também possui apagador (`label-eraser`).
-- **Cell Border Tools**: Permitem aplicar (`cell-border`) ou apagar (`cell-border-eraser`) as bordas de uma célula específica. Há uma sub-janela de seleção dos lados (Top, Right, Bottom, Left), escolha de tamanho, cor e comportamento de alinhamento (`inner`, `center`, `outer`).
-- **General Tools**: Ferramenta `Pointer` (não faz nada na célula) e ferramenta para apagar todo o conteúdo de uma célula (`Eraser Area`). Há também botão para limpar a grade completa.
+- **Background Tools**: Permitem Pintar cor sólida (`bg-color`) ou colocar um SVG em código (`bg-svg`) de redimensionamento em 100% sob a célula.
+- **Item Tools**: Permitem Inserir um SVG em código (`item-svg`) que flutua acima do background.
+- **Label Tools**: Permite inserir texto (`label`) com tipografia editável (fonte, tamanho, cor e alinhamento: start, center, end). Inclui suporte a moldura (frame) configurável com cor de fundo, opacidade, borda, raio e preenchimento.
+- **Cell Border Tools**: Permitem aplicar (`cell-border`) as bordas de uma célula específica. Há uma sub-janela de seleção dos lados (Top, Right, Bottom, Left), escolha de tamanho, cor e comportamento de alinhamento (`inner`, `center`, `outer`).
+- **Unified Eraser Tool**: Botão universal de "Erase Mode" configurável por contexto. Quando ativo, atua apagando a camada (Layer) referente à ferramenta recém ativada (Background, Item, Label, Borders), simplificando a interface.
+- **General Tools**: Ferramenta `Pointer` (não faz nada na célula) e ferramenta para apagar todo o conteúdo de uma célula de vez (`Eraser Area`). Há também botão para limpar a grade completa.
 
 ### 3. Gerenciamento (Managers)
 - **Manage Assets**: Fica num modal dedicado (Asset Manager) para salvar strings de código hexagonal (cores), código limpo SVG para fundos, e código limpo SVG para itens. Suporta adição, edição, exclusão e visualização prévia. Inclui a ferramenta **Detectar Cor**, que utiliza a EyeDropper API para capturar cores diretamente da tela do usuário.

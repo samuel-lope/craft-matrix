@@ -49,7 +49,7 @@ export type GridState = {
   cells: Record<string, CellData>;
 };
 
-export type Tool = 'pointer' | 'bg-color' | 'bg-svg' | 'bg-eraser' | 'item-svg' | 'item-eraser' | 'label' | 'label-eraser' | 'cell-border' | 'cell-border-eraser' | 'eraser-all';
+export type Tool = 'pointer' | 'bg-color' | 'bg-svg' | 'item-svg' | 'label' | 'cell-border' | 'eraser-all';
 
 export type SavedAsset = {
   id: string;

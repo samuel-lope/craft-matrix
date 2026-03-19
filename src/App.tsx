@@ -314,6 +314,7 @@ export default function App() {
   });
 
   const [activeTool, setActiveTool] = useState<Tool>('pointer');
+  const [isEraserMode, setIsEraserMode] = useState<boolean>(false);
   const [currentColor, setCurrentColor] = useState<string>('rgba(59, 130, 246, 0.5)');
   const [currentBgSvg, setCurrentBgSvg] = useState<string>('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%"><rect width="100" height="100" fill="#fef08a" /></svg>');
   const [currentItemSvg, setCurrentItemSvg] = useState<string>('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="120" height="120"><circle cx="50" cy="50" r="40" fill="red" opacity="0.8" /></svg>');
@@ -377,6 +378,7 @@ export default function App() {
 
   const toolStateRef = useRef({
     activeTool,
+    isEraserMode,
     currentColor,
     currentBgSvg,
     currentItemSvg,
@@ -401,6 +403,7 @@ export default function App() {
   useEffect(() => {
     toolStateRef.current = {
       activeTool,
+      isEraserMode,
       currentColor,
       currentBgSvg,
       currentItemSvg,
@@ -421,7 +424,7 @@ export default function App() {
       currentCellBorderAlignment,
       activeEdges
     };
-  }, [activeTool, currentColor, currentBgSvg, currentItemSvg, currentLabelText, currentLabelFont, currentLabelSize, currentLabelColor, currentLabelAlign, currentLabelFrameEnabled, currentLabelFrameBgColor, currentLabelFrameBgOpacity, currentLabelFrameBorderColor, currentLabelFrameBorderWidth, currentLabelFrameRadius, currentLabelFramePadding, currentCellBorderWidth, currentCellBorderColor, currentCellBorderAlignment, activeEdges]);
+  }, [activeTool, isEraserMode, currentColor, currentBgSvg, currentItemSvg, currentLabelText, currentLabelFont, currentLabelSize, currentLabelColor, currentLabelAlign, currentLabelFrameEnabled, currentLabelFrameBgColor, currentLabelFrameBgOpacity, currentLabelFrameBorderColor, currentLabelFrameBorderWidth, currentLabelFrameRadius, currentLabelFramePadding, currentCellBorderWidth, currentCellBorderColor, currentCellBorderAlignment, activeEdges]);
 
   // Load assets from LocalStorage on mount
   useEffect(() => {
@@ -601,6 +604,7 @@ export default function App() {
     const key = `${row},${col}`;
     const {
       activeTool,
+      isEraserMode,
       currentColor,
       currentBgSvg,
       currentItemSvg,
@@ -626,53 +630,59 @@ export default function App() {
       const newCells = { ...prev.cells };
       const currentCell = newCells[key] || {};
 
-      if (activeTool === 'bg-color') {
-        newCells[key] = { ...currentCell, bgType: 'color', bgValue: currentColor };
-      } else if (activeTool === 'bg-svg') {
-        newCells[key] = { ...currentCell, bgType: 'svg', bgValue: currentBgSvg };
-      } else if (activeTool === 'bg-eraser') {
-        newCells[key] = { ...currentCell, bgType: undefined, bgValue: undefined };
+      if (activeTool === 'bg-color' || activeTool === 'bg-svg') {
+        if (isEraserMode) {
+          newCells[key] = { ...currentCell, bgType: undefined, bgValue: undefined };
+        } else {
+          newCells[key] = { ...currentCell, bgType: activeTool === 'bg-color' ? 'color' : 'svg', bgValue: activeTool === 'bg-color' ? currentColor : currentBgSvg };
+        }
       } else if (activeTool === 'item-svg') {
-        newCells[key] = { ...currentCell, itemValue: currentItemSvg };
-      } else if (activeTool === 'item-eraser') {
-        newCells[key] = { ...currentCell, itemValue: undefined };
+        if (isEraserMode) {
+          newCells[key] = { ...currentCell, itemValue: undefined };
+        } else {
+          newCells[key] = { ...currentCell, itemValue: currentItemSvg };
+        }
       } else if (activeTool === 'label') {
-        newCells[key] = { 
-          ...currentCell, 
-          label: {
-            text: currentLabelText,
-            font: currentLabelFont,
-            size: currentLabelSize,
-            color: currentLabelColor,
-            align: currentLabelAlign,
-            ...(currentLabelFrameEnabled ? {
-              frameBgColor: currentLabelFrameBgColor,
-              frameBgOpacity: currentLabelFrameBgOpacity,
-              frameBorderColor: currentLabelFrameBorderColor,
-              frameBorderWidth: currentLabelFrameBorderWidth,
-              frameRadius: currentLabelFrameRadius,
-              framePadding: currentLabelFramePadding,
-            } : {})
-          } 
-        };
-      } else if (activeTool === 'label-eraser') {
-        newCells[key] = { ...currentCell, label: undefined };
+        if (isEraserMode) {
+          newCells[key] = { ...currentCell, label: undefined };
+        } else {
+          newCells[key] = { 
+            ...currentCell, 
+            label: {
+              text: currentLabelText,
+              font: currentLabelFont,
+              size: currentLabelSize,
+              color: currentLabelColor,
+              align: currentLabelAlign,
+              ...(currentLabelFrameEnabled ? {
+                frameBgColor: currentLabelFrameBgColor,
+                frameBgOpacity: currentLabelFrameBgOpacity,
+                frameBorderColor: currentLabelFrameBorderColor,
+                frameBorderWidth: currentLabelFrameBorderWidth,
+                frameRadius: currentLabelFrameRadius,
+                framePadding: currentLabelFramePadding,
+              } : {})
+            } 
+          };
+        }
       } else if (activeTool === 'cell-border') {
-        newCells[key] = {
-          ...currentCell,
-          borderTop: activeEdges.top ? { width: currentCellBorderWidth, color: currentCellBorderColor, alignment: currentCellBorderAlignment } : currentCell.borderTop,
-          borderRight: activeEdges.right ? { width: currentCellBorderWidth, color: currentCellBorderColor, alignment: currentCellBorderAlignment } : currentCell.borderRight,
-          borderBottom: activeEdges.bottom ? { width: currentCellBorderWidth, color: currentCellBorderColor, alignment: currentCellBorderAlignment } : currentCell.borderBottom,
-          borderLeft: activeEdges.left ? { width: currentCellBorderWidth, color: currentCellBorderColor, alignment: currentCellBorderAlignment } : currentCell.borderLeft,
-        };
-      } else if (activeTool === 'cell-border-eraser') {
-        newCells[key] = {
-          ...currentCell,
-          borderTop: activeEdges.top ? undefined : currentCell.borderTop,
-          borderRight: activeEdges.right ? undefined : currentCell.borderRight,
-          borderBottom: activeEdges.bottom ? undefined : currentCell.borderBottom,
-          borderLeft: activeEdges.left ? undefined : currentCell.borderLeft,
-        };
+        if (isEraserMode) {
+          newCells[key] = {
+            ...currentCell,
+            borderTop: activeEdges.top ? undefined : currentCell.borderTop,
+            borderRight: activeEdges.right ? undefined : currentCell.borderRight,
+            borderBottom: activeEdges.bottom ? undefined : currentCell.borderBottom,
+            borderLeft: activeEdges.left ? undefined : currentCell.borderLeft,
+          };
+        } else {
+          newCells[key] = {
+            ...currentCell,
+            borderTop: activeEdges.top ? { width: currentCellBorderWidth, color: currentCellBorderColor, alignment: currentCellBorderAlignment } : currentCell.borderTop,
+            borderRight: activeEdges.right ? { width: currentCellBorderWidth, color: currentCellBorderColor, alignment: currentCellBorderAlignment } : currentCell.borderRight,
+            borderBottom: activeEdges.bottom ? { width: currentCellBorderWidth, color: currentCellBorderColor, alignment: currentCellBorderAlignment } : currentCell.borderBottom,
+            borderLeft: activeEdges.left ? { width: currentCellBorderWidth, color: currentCellBorderColor, alignment: currentCellBorderAlignment } : currentCell.borderLeft,
+          };
+        }
       } else if (activeTool === 'eraser-all') {
         delete newCells[key];
       }
@@ -745,6 +755,11 @@ export default function App() {
     setShowGridManager(false);
   };
 
+  const handleToolSelect = (tool: Tool) => {
+    setActiveTool(tool);
+    setIsEraserMode(false);
+  };
+
   if (showAssetManager) {
     return (
       <AssetManager
@@ -773,28 +788,40 @@ export default function App() {
       
       {/* Left Toolbar (Tools) */}
       <aside className="w-16 flex flex-col items-center py-4 gap-4 z-20 border-r border-neutral-800 bg-black shrink-0 overflow-y-auto custom-scrollbar shadow-xl">
-        <ToolButton icon={MousePointer2} title="Pointer" isActive={activeTool === 'pointer'} onClick={() => setActiveTool('pointer')} />
+        <ToolButton icon={MousePointer2} title="Pointer" isActive={activeTool === 'pointer' && !isEraserMode} onClick={() => handleToolSelect('pointer')} />
         
         <div className="w-8 h-px bg-neutral-800 shrink-0" />
         
-        <ToolButton icon={PaintBucket} title="Fill Background Color" isActive={activeTool === 'bg-color'} onClick={() => setActiveTool('bg-color')} />
-        <ToolButton icon={ImageIcon} title="Fill Background SVG" isActive={activeTool === 'bg-svg'} onClick={() => setActiveTool('bg-svg')} />
-        <ToolButton icon={Eraser} title="Erase Background" isActive={activeTool === 'bg-eraser'} onClick={() => setActiveTool('bg-eraser')} />
+        <ToolButton icon={PaintBucket} title="Fill Background Color" isActive={activeTool === 'bg-color' && !isEraserMode} onClick={() => handleToolSelect('bg-color')} />
+        <ToolButton icon={ImageIcon} title="Fill Background SVG" isActive={activeTool === 'bg-svg' && !isEraserMode} onClick={() => handleToolSelect('bg-svg')} />
         
         <div className="w-8 h-px bg-neutral-800 shrink-0" />
         
-        <ToolButton icon={ImageIcon} title="Place Item SVG" isActive={activeTool === 'item-svg'} onClick={() => setActiveTool('item-svg')} />
-        <ToolButton icon={Eraser} title="Erase Item" isActive={activeTool === 'item-eraser'} onClick={() => setActiveTool('item-eraser')} />
+        <ToolButton icon={ImageIcon} title="Place Item SVG" isActive={activeTool === 'item-svg' && !isEraserMode} onClick={() => handleToolSelect('item-svg')} />
         
         <div className="w-8 h-px bg-neutral-800 shrink-0" />
         
-        <ToolButton icon={Type} title="Place Text Label" isActive={activeTool === 'label'} onClick={() => setActiveTool('label')} />
-        <ToolButton icon={Eraser} title="Erase Text Label" isActive={activeTool === 'label-eraser'} onClick={() => setActiveTool('label-eraser')} />
+        <ToolButton icon={Type} title="Place Text Label" isActive={activeTool === 'label' && !isEraserMode} onClick={() => handleToolSelect('label')} />
         
         <div className="w-8 h-px bg-neutral-800 shrink-0" />
         
-        <ToolButton icon={Square} title="Apply Cell Borders" isActive={activeTool === 'cell-border'} onClick={() => setActiveTool('cell-border')} />
-        <ToolButton icon={Eraser} title="Erase Cell Borders" isActive={activeTool === 'cell-border-eraser'} onClick={() => setActiveTool('cell-border-eraser')} />
+        <ToolButton icon={Square} title="Apply Cell Borders" isActive={activeTool === 'cell-border' && !isEraserMode} onClick={() => handleToolSelect('cell-border')} />
+
+        <div className="w-8 h-px bg-neutral-800 shrink-0" />
+        
+        <ToolButton 
+          icon={Eraser} 
+          title="Erase Mode (applies to active tool)" 
+          isActive={isEraserMode} 
+          onClick={() => {
+            if (['bg-color', 'bg-svg', 'item-svg', 'label', 'cell-border'].includes(activeTool)) {
+              setIsEraserMode(!isEraserMode);
+            } else {
+              handleToolSelect('bg-color');
+              setIsEraserMode(true);
+            }
+          }} 
+        />
 
         <div className="w-8 h-px bg-neutral-800 shrink-0" />
         
@@ -1407,7 +1434,19 @@ export default function App() {
             Tool Settings
           </h2>
           <div className="px-1">
-            {activeTool === 'bg-color' && (
+            {isEraserMode ? (
+              <div className="text-[10px] uppercase tracking-widest text-neutral-500 font-bold p-3 text-center border border-dashed border-neutral-800 rounded-lg">
+                Eraser Mode Active<br/>
+                <span className="text-rose-400 mt-1 block">Erasing {
+                  activeTool === 'bg-color' || activeTool === 'bg-svg' ? 'Backgrounds' :
+                  activeTool === 'item-svg' ? 'Items' :
+                  activeTool === 'label' ? 'Labels' :
+                  activeTool === 'cell-border' ? 'Borders' : 'Content'
+                }</span>
+              </div>
+            ) : (
+              <>
+                {activeTool === 'bg-color' && (
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Select Color</label>
@@ -1656,7 +1695,7 @@ export default function App() {
                 </div>
               </div>
             )}
-          {(activeTool === 'cell-border' || activeTool === 'cell-border-eraser') && (
+          {activeTool === 'cell-border' && (
               <div className="space-y-5">
                 <div className="space-y-3">
                   <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider text-center block">Edges to Apply/Erase</label>
@@ -1747,7 +1786,8 @@ export default function App() {
                 )}
               </div>
             )}
-          
+            </>
+          )}
           </div>
         </div>
       </aside>
