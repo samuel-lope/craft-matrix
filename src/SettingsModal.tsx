@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  X, Plus, Trash2, Edit2, Save, Pipette, Link, Check, Play, Cloud
+  X, Plus, Trash2, Edit2, Save, Pipette, Link, Check, Play, Cloud, Download, Loader2, Columns3
 } from 'lucide-react';
 import { SavedAsset, SavedGrid } from './types';
 import { generateSimplifiedSvg } from './gridUtils';
@@ -17,6 +17,7 @@ type SettingsModalProps = {
   isOpen: boolean;
   onClose: () => void;
   initialTab?: 'grids' | 'assets';
+  currentUser: { id: string; login: string } | null;
   // Asset props
   savedColors: SavedAsset[];
   setSavedColors: (assets: SavedAsset[]) => void;
@@ -28,17 +29,46 @@ type SettingsModalProps = {
   onLoadGrid: (grid: SavedGrid) => void;
 };
 
+// ─── Column Selector ─────────────────────────────────────────────────────────
+
+const COLUMN_OPTIONS = [3, 4, 5, 6] as const;
+const LS_KEY_COLUMNS = 'settingsColumnCount';
+
+function ColumnSelector({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <Columns3 className="w-3.5 h-3.5 text-neutral-500" />
+      {COLUMN_OPTIONS.map(n => (
+        <button
+          key={n}
+          onClick={() => onChange(n)}
+          className={`w-7 h-7 flex items-center justify-center text-[10px] font-bold tracking-widest transition-colors rounded-sm ${
+            value === n
+              ? 'bg-white text-black'
+              : 'bg-neutral-900 text-neutral-500 hover:text-neutral-300 hover:bg-neutral-800 border border-neutral-800'
+          }`}
+        >
+          {n}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 // ─── Assets Tab ──────────────────────────────────────────────────────────────
 
 function AssetsTab({
   savedColors, setSavedColors,
   savedBgSvgs, setSavedBgSvgs,
-  savedItemSvgs, setSavedItemSvgs
-}: Omit<SettingsModalProps, 'isOpen' | 'onClose' | 'initialTab' | 'onLoadGrid'>) {
+  savedItemSvgs, setSavedItemSvgs,
+  columnCount, currentUser
+}: Omit<SettingsModalProps, 'isOpen' | 'onClose' | 'initialTab' | 'onLoadGrid'> & { columnCount: number }) {
   const [assetSection, setAssetSection] = useState<'colors' | 'bg-svgs' | 'item-svgs'>('colors');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [editValue, setEditValue] = useState('');
+  const [isFetching, setIsFetching] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const getActiveAssets = (): SavedAsset[] => {
     if (assetSection === 'colors') return savedColors;
@@ -86,6 +116,52 @@ function AssetsTab({
     if (editingId === id) setEditingId(null);
   };
 
+  const handleFetchCloudAssets = async () => {
+    setIsFetching(true);
+    try {
+      const res = await fetch('/api/sync/list');
+      if (!res.ok) throw new Error('Failed to fetch');
+      const data = await res.json();
+      const workspaces = data.workspaces || [];
+
+      // Consolidate assets from all workspaces
+      let allColors: SavedAsset[] = [];
+      let allBgSvgs: SavedAsset[] = [];
+      let allItemSvgs: SavedAsset[] = [];
+
+      for (const ws of workspaces) {
+        if (ws.colors_json) {
+          try { allColors = [...allColors, ...JSON.parse(ws.colors_json)]; } catch {}
+        }
+        if (ws.bg_svgs_json) {
+          try { allBgSvgs = [...allBgSvgs, ...JSON.parse(ws.bg_svgs_json)]; } catch {}
+        }
+        if (ws.item_svgs_json) {
+          try { allItemSvgs = [...allItemSvgs, ...JSON.parse(ws.item_svgs_json)]; } catch {}
+        }
+      }
+
+      // Deduplicate by id
+      const dedup = (arr: SavedAsset[]) => {
+        const seen = new Set<string>();
+        return arr.filter(a => { if (seen.has(a.id)) return false; seen.add(a.id); return true; });
+      };
+
+      setSavedColors(dedup(allColors));
+      setSavedBgSvgs(dedup(allBgSvgs));
+      setSavedItemSvgs(dedup(allItemSvgs));
+
+      localStorage.setItem('savedColors', JSON.stringify(dedup(allColors)));
+      localStorage.setItem('savedBgSvgs', JSON.stringify(dedup(allBgSvgs)));
+      localStorage.setItem('savedItemSvgs', JSON.stringify(dedup(allItemSvgs)));
+    } catch (err) {
+      console.error('Failed to fetch cloud assets:', err);
+    } finally {
+      setIsFetching(false);
+      setShowConfirm(false);
+    }
+  };
+
   const sectionLabel = { colors: 'Colors', 'bg-svgs': 'Background SVGs', 'item-svgs': 'Item SVGs' }[assetSection];
 
   return (
@@ -109,6 +185,12 @@ function AssetsTab({
           <div className="flex items-center justify-between pb-4 border-b border-neutral-800">
             <h2 className="text-sm font-bold uppercase tracking-widest text-neutral-200">{sectionLabel}</h2>
             <div className="flex items-center gap-2">
+              {currentUser && (
+                <button onClick={() => setShowConfirm(true)} disabled={isFetching} className="btn-secondary flex items-center gap-2 py-1.5 px-3 text-[10px]">
+                  {isFetching ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+                  Fetch Cloud
+                </button>
+              )}
               {assetSection === 'colors' && 'EyeDropper' in window && (
                 <button onClick={handleDetectColor} className="btn-secondary flex items-center gap-2 py-1.5 px-3 text-[10px]">
                   <Pipette className="w-3.5 h-3.5" /> Detect
@@ -120,7 +202,7 @@ function AssetsTab({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))` }}>
             {getActiveAssets().map(asset => (
               <div key={asset.id} className="bg-neutral-950 border border-neutral-800 p-3 flex flex-col gap-2 group transition-colors hover:border-neutral-500 rounded-sm">
                 <div className="h-20 border border-neutral-800 flex items-center justify-center bg-black overflow-hidden relative rounded-sm">
@@ -189,18 +271,36 @@ function AssetsTab({
           </div>
         )}
       </main>
+
+      {/* Confirm replace modal */}
+      <Modal isOpen={showConfirm} onClose={() => setShowConfirm(false)} title="Substituir Assets Locais">
+        <div className="space-y-4">
+          <p className="text-neutral-400 text-xs">
+            Isso substituirá todos os seus assets locais (cores, SVGs de fundo e SVGs de itens) pelos dados salvos na nuvem. Esta ação não pode ser desfeita.
+          </p>
+          <div className="flex justify-end gap-3 pt-4 border-t border-neutral-800">
+            <button onClick={() => setShowConfirm(false)} className="px-4 py-2 text-[10px] uppercase tracking-widest font-bold text-neutral-500 hover:text-white transition-colors">Cancelar</button>
+            <button onClick={handleFetchCloudAssets} disabled={isFetching} className="px-4 py-2 text-[10px] uppercase tracking-widest font-bold bg-white text-black hover:bg-neutral-200 transition-colors rounded-sm flex items-center gap-2">
+              {isFetching && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+              Confirmar
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
 
 // ─── Grids Tab ────────────────────────────────────────────────────────────────
 
-function GridsTab({ onLoadGrid, onClose }: { onLoadGrid: (g: SavedGrid) => void; onClose: () => void }) {
+function GridsTab({ onLoadGrid, onClose, columnCount, currentUser }: { onLoadGrid: (g: SavedGrid) => void; onClose: () => void; columnCount: number; currentUser: { id: string; login: string } | null }) {
   const [savedGrids, setSavedGrids] = useState<SavedGrid[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [isFetching, setIsFetching] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem('savedGrids');
@@ -229,9 +329,55 @@ function GridsTab({ onLoadGrid, onClose }: { onLoadGrid: (g: SavedGrid) => void;
     setTimeout(() => setCopiedId(null), 2000);
   };
 
+  const handleFetchCloudGrids = async () => {
+    setIsFetching(true);
+    try {
+      const res = await fetch('/api/sync/list');
+      if (!res.ok) throw new Error('Failed to fetch');
+      const data = await res.json();
+      const workspaces = data.workspaces || [];
+
+      const cloudGrids: SavedGrid[] = workspaces.map((ws: any) => {
+        let gridState;
+        try { gridState = JSON.parse(ws.data_json); } catch { return null; }
+        return {
+          id: ws.id,
+          name: `Cloud Workspace`,
+          updatedAt: ws.updated_at || Date.now(),
+          workspaceId: ws.id,
+          gridState
+        } as SavedGrid;
+      }).filter(Boolean) as SavedGrid[];
+
+      // Merge: keep names from existing local grids when workspaceId matches
+      const localGrids = savedGrids;
+      const merged = cloudGrids.map(cg => {
+        const local = localGrids.find(lg => lg.workspaceId === cg.workspaceId);
+        return local ? { ...cg, name: local.name, id: local.id } : cg;
+      });
+
+      persist(merged);
+    } catch (err) {
+      console.error('Failed to fetch cloud grids:', err);
+    } finally {
+      setIsFetching(false);
+      setShowConfirm(false);
+    }
+  };
+
   return (
     <main className="flex-1 overflow-y-auto p-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div className="flex items-center justify-between pb-4 mb-5 border-b border-neutral-800">
+        <h2 className="text-sm font-bold uppercase tracking-widest text-neutral-200">Saved Grids</h2>
+        {currentUser && (
+          <button onClick={() => setShowConfirm(true)} disabled={isFetching} className="btn-secondary flex items-center gap-2 py-1.5 px-3 text-[10px]">
+            {isFetching ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+            Fetch Cloud
+          </button>
+        )}
+      </div>
+
+      <div className="grid gap-5" style={{ gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))` }}>
         {savedGrids.length === 0 ? (
           <div className="col-span-full py-12 text-center text-[10px] font-bold tracking-widest uppercase text-neutral-600 border border-dashed border-neutral-800">
             No saved grids. Save your work from the main editor.
@@ -319,6 +465,22 @@ function GridsTab({ onLoadGrid, onClose }: { onLoadGrid: (g: SavedGrid) => void;
           </div>
         </div>
       </Modal>
+
+      {/* Fetch cloud confirm */}
+      <Modal isOpen={showConfirm} onClose={() => setShowConfirm(false)} title="Substituir Grids Locais">
+        <div className="space-y-4">
+          <p className="text-neutral-400 text-xs">
+            Isso substituirá seus grids locais pelos dados salvos na nuvem. Grids que compartilham o mesmo workspace ID terão seus dados atualizados, mantendo nomes locais. Esta ação não pode ser desfeita.
+          </p>
+          <div className="flex justify-end gap-3 pt-4 border-t border-neutral-800">
+            <button onClick={() => setShowConfirm(false)} className="px-4 py-2 text-[10px] uppercase tracking-widest font-bold text-neutral-500 hover:text-white transition-colors">Cancelar</button>
+            <button onClick={handleFetchCloudGrids} disabled={isFetching} className="px-4 py-2 text-[10px] uppercase tracking-widest font-bold bg-white text-black hover:bg-neutral-200 transition-colors rounded-sm flex items-center gap-2">
+              {isFetching && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+              Confirmar
+            </button>
+          </div>
+        </div>
+      </Modal>
     </main>
   );
 }
@@ -327,15 +489,25 @@ function GridsTab({ onLoadGrid, onClose }: { onLoadGrid: (g: SavedGrid) => void;
 
 export default function SettingsModal({
   isOpen, onClose, initialTab = 'grids',
+  currentUser,
   savedColors, setSavedColors,
   savedBgSvgs, setSavedBgSvgs,
   savedItemSvgs, setSavedItemSvgs,
   onLoadGrid
 }: SettingsModalProps) {
   const [activeTab, setActiveTab] = useState<'grids' | 'assets'>(initialTab);
+  const [columnCount, setColumnCount] = useState<number>(() => {
+    const stored = localStorage.getItem(LS_KEY_COLUMNS);
+    const parsed = stored ? parseInt(stored) : NaN;
+    return !isNaN(parsed) && parsed >= 3 && parsed <= 6 ? parsed : 3;
+  });
 
-  // Sync tab when modal re-opens with a different initialTab
   useEffect(() => { if (isOpen) setActiveTab(initialTab); }, [isOpen, initialTab]);
+
+  const handleColumnChange = (n: number) => {
+    setColumnCount(n);
+    localStorage.setItem(LS_KEY_COLUMNS, String(n));
+  };
 
   if (!isOpen) return null;
 
@@ -361,23 +533,27 @@ export default function SettingsModal({
             ))}
           </nav>
         </div>
-        <button
-          onClick={onClose}
-          className="p-2 text-neutral-500 hover:text-white hover:bg-neutral-900 transition-colors rounded-sm"
-          title="Close"
-        >
-          <X className="w-5 h-5" />
-        </button>
+        <div className="flex items-center gap-4">
+          <ColumnSelector value={columnCount} onChange={handleColumnChange} />
+          <button
+            onClick={onClose}
+            className="p-2 text-neutral-500 hover:text-white hover:bg-neutral-900 transition-colors rounded-sm"
+            title="Close"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
       </header>
 
       {/* Tab content */}
       {activeTab === 'grids' ? (
-        <GridsTab onLoadGrid={onLoadGrid} onClose={onClose} />
+        <GridsTab onLoadGrid={onLoadGrid} onClose={onClose} columnCount={columnCount} currentUser={currentUser} />
       ) : (
         <AssetsTab
           savedColors={savedColors} setSavedColors={setSavedColors}
           savedBgSvgs={savedBgSvgs} setSavedBgSvgs={setSavedBgSvgs}
           savedItemSvgs={savedItemSvgs} setSavedItemSvgs={setSavedItemSvgs}
+          columnCount={columnCount} currentUser={currentUser}
         />
       )}
     </div>

@@ -2065,6 +2065,7 @@ export default function App() {
         isOpen={showSettingsModal}
         onClose={() => setShowSettingsModal(false)}
         initialTab={settingsTab}
+        currentUser={currentUser}
         savedColors={savedColors}
         setSavedColors={(assets) => {
           setSavedColors(assets);
