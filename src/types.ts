@@ -61,5 +61,6 @@ export type SavedGrid = {
   id: string;
   name: string;
   updatedAt: number;
+  workspaceId?: string;
   gridState: GridState;
 };

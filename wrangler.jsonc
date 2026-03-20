@@ -1,0 +1,12 @@
+{
+  "name": "craft-matrix",
+  "compatibility_date": "2024-03-20",
+  "pages_build_output_dir": "dist",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "craft-matrix-db",
+      "database_id": "28c5f11a-4507-48f9-9ae9-09bc693f8e12"
+    }
+  ]
+}

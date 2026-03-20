@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { Settings, MousePointer2, PaintBucket, Image as ImageIcon, Eraser, Download, Square, Library, FolderOpen, Save, Type, Grid, Layout, Plus, X, Pipette } from 'lucide-react';
+import { Settings, MousePointer2, PaintBucket, Image as ImageIcon, Eraser, Download, Square, Library, FolderOpen, Save, Type, Grid, Layout, Plus, X, Pipette, Cloud, Link, Loader2 } from 'lucide-react';
 import * as htmlToImage from 'html-to-image';
 import { CellData, GridState, Tool, CellBorder, BorderAlignment, SavedAsset, SavedGrid } from './types';
 import AssetManager from './AssetManager';
@@ -356,6 +356,8 @@ export default function App() {
 
   const [currentGridId, setCurrentGridId] = useState<string | null>(null);
   const [currentGridName, setCurrentGridName] = useState<string>('');
+  const [currentWorkspaceId, setCurrentWorkspaceId] = useState<string | null>(null);
+  const [isCloudSyncing, setIsCloudSyncing] = useState<boolean>(false);
 
   // Export modal states
   const [isPngExportModalOpen, setIsPngExportModalOpen] = useState(false);
@@ -472,6 +474,44 @@ export default function App() {
 
   // Load assets from LocalStorage on mount
   useEffect(() => {
+    // Cloudflare D1 Workspace Check
+    const params = new URLSearchParams(window.location.search);
+    const workspaceId = params.get('workspace');
+    if (workspaceId) {
+      setIsCloudSyncing(true);
+      fetch(`/api/sync?id=${workspaceId}`)
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (data && data.data_json) {
+            const loadedGridState = JSON.parse(data.data_json);
+            setGridState(loadedGridState);
+            setCurrentWorkspaceId(workspaceId);
+            const stored = localStorage.getItem('savedGrids');
+            let grids: SavedGrid[] = stored ? JSON.parse(stored) : [];
+            const existing = grids.find(g => g.workspaceId === workspaceId);
+            if (existing) {
+              setCurrentGridId(existing.id);
+              setCurrentGridName(existing.name);
+            } else {
+              const newSave: SavedGrid = {
+                id: Date.now().toString(),
+                name: `Shared Workspace`,
+                updatedAt: data.updated_at || Date.now(),
+                workspaceId,
+                gridState: loadedGridState
+              };
+              grids.push(newSave);
+              localStorage.setItem('savedGrids', JSON.stringify(grids));
+              setCurrentGridId(newSave.id);
+              setCurrentGridName(newSave.name);
+            }
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }
+        })
+        .catch(console.error)
+        .finally(() => setIsCloudSyncing(false));
+    }
+
     const storedColors = localStorage.getItem('savedColors');
     const storedBgSvgs = localStorage.getItem('savedBgSvgs');
     const storedItemSvgs = localStorage.getItem('savedItemSvgs');
@@ -742,13 +782,78 @@ export default function App() {
     });
   }, []);
 
+  const syncToCloud = (workspaceId: string, gridData: GridState, updatedAt: number) => {
+    setIsCloudSyncing(true);
+    fetch('/api/sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: workspaceId,
+        data_json: JSON.stringify(gridData),
+        updated_at: updatedAt
+      })
+    })
+    .catch(console.error)
+    .finally(() => setIsCloudSyncing(false));
+  };
+
+  const handleCloudShare = () => {
+    if (currentWorkspaceId) {
+      navigator.clipboard.writeText(`${window.location.origin}/?workspace=${currentWorkspaceId}`);
+      alert('Link copiado para a área de transferência!');
+      return;
+    }
+    
+    // Fallback to crypto.randomUUID or simple manual generator
+    const generateUUID = () => {
+      if (crypto.randomUUID) return crypto.randomUUID();
+      return '10000000-1000-4000-8000-100000000000'.replace(/[018]/g, (c: any) =>
+        (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+      );
+    }
+    const newWorkspaceId = generateUUID();
+    setCurrentWorkspaceId(newWorkspaceId);
+    
+    // Auto-save the current state to locals so we can link it
+    const now = Date.now();
+    let saveId = currentGridId;
+    let saveNameVal = currentGridName;
+    
+    const stored = localStorage.getItem('savedGrids');
+    let grids: SavedGrid[] = stored ? JSON.parse(stored) : [];
+    
+    if (saveId) {
+      grids = grids.map(g => g.id === saveId ? { ...g, workspaceId: newWorkspaceId, updatedAt: now, gridState: gridState } : g);
+    } else {
+      saveId = Date.now().toString();
+      saveNameVal = 'Cloud Workspace';
+      const newSave: SavedGrid = {
+        id: saveId,
+        name: saveNameVal,
+        updatedAt: now,
+        workspaceId: newWorkspaceId,
+        gridState: gridState
+      };
+      grids.push(newSave);
+      setCurrentGridId(saveId);
+      setCurrentGridName(saveNameVal);
+    }
+    localStorage.setItem('savedGrids', JSON.stringify(grids));
+    
+    syncToCloud(newWorkspaceId, gridState, now);
+    navigator.clipboard.writeText(`${window.location.origin}/?workspace=${newWorkspaceId}`);
+    alert('Workspace sync ativado! Link copiado para a área de transferência.');
+  };
+
   const handleSaveGrid = () => {
     if (!saveName.trim()) return;
 
+    const now = Date.now();
     const newSave: SavedGrid = {
       id: Date.now().toString(),
       name: saveName.trim(),
-      updatedAt: Date.now(),
+      updatedAt: now,
+      workspaceId: currentWorkspaceId || undefined,
       gridState: gridState
     };
 
@@ -756,6 +861,8 @@ export default function App() {
     const grids: SavedGrid[] = stored ? JSON.parse(stored) : [];
     grids.push(newSave);
     localStorage.setItem('savedGrids', JSON.stringify(grids));
+
+    if (currentWorkspaceId) syncToCloud(currentWorkspaceId, gridState, now);
 
     setCurrentGridId(newSave.id);
     setCurrentGridName(newSave.name);
@@ -767,13 +874,19 @@ export default function App() {
     if (!currentGridId) return;
     const stored = localStorage.getItem('savedGrids');
     if (!stored) return;
+    const now = Date.now();
+    
     let grids: SavedGrid[] = JSON.parse(stored);
     grids = grids.map(g => g.id === currentGridId ? {
       ...g,
-      updatedAt: Date.now(),
+      updatedAt: now,
+      workspaceId: currentWorkspaceId || g.workspaceId,
       gridState: gridState
     } : g);
     localStorage.setItem('savedGrids', JSON.stringify(grids));
+    
+    if (currentWorkspaceId) syncToCloud(currentWorkspaceId, gridState, now);
+    
     setIsSavePromptModalOpen(false);
   };
 
@@ -796,6 +909,7 @@ export default function App() {
     setGridState(loadedGrid.gridState);
     setCurrentGridId(loadedGrid.id);
     setCurrentGridName(loadedGrid.name);
+    setCurrentWorkspaceId(loadedGrid.workspaceId || null);
     setShowGridManager(false);
   };
 
@@ -1336,6 +1450,15 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-3">
+            <button
+              onClick={handleCloudShare}
+              className={`flex items-center gap-2 px-3 py-2 text-sm font-bold uppercase tracking-widest rounded-lg transition-all border ${currentWorkspaceId ? 'bg-sky-500/10 text-sky-400 border-sky-500/30 hover:bg-sky-500/20' : 'text-slate-300 hover:text-white border-transparent hover:bg-neutral-800'}`}
+              title={currentWorkspaceId ? 'Copy Share Link' : 'Sync to Cloud'}
+            >
+              {isCloudSyncing ? <Loader2 className="w-4 h-4 animate-spin text-sky-400" /> : <Cloud className={`w-4 h-4 ${currentWorkspaceId ? 'text-sky-400' : ''}`} />}
+              <span>{currentWorkspaceId ? 'Cloud Sync On' : 'Cloud Sync'}</span>
+            </button>
+            <div className="w-px h-6 bg-slate-700/50 mx-1"></div>
             <button
               onClick={() => setShowGridManager(true)}
               className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-300 hover:text-indigo-300 hover:bg-indigo-500/10 rounded-lg transition-all border border-transparent hover:border-indigo-500/30"
