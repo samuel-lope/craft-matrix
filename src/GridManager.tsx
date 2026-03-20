@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Trash2, Edit2, Play, Save } from 'lucide-react';
+import { ArrowLeft, Trash2, Edit2, Play, Save, Cloud, Link, Check } from 'lucide-react';
 import { SavedGrid, GridState } from './types';
 import Modal from './Modal';
+import { generateSimplifiedSvg } from './gridUtils';
 
 type GridManagerProps = {
   onClose: () => void;
@@ -13,6 +14,14 @@ export default function GridManager({ onClose, onLoad }: GridManagerProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const handleCopyLink = (workspaceId: string) => {
+    const url = `${window.location.origin}/?workspace=${workspaceId}`;
+    navigator.clipboard.writeText(url);
+    setCopiedId(workspaceId);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
 
   useEffect(() => {
     const stored = localStorage.getItem('savedGrids');
@@ -60,7 +69,21 @@ export default function GridManager({ onClose, onLoad }: GridManagerProps) {
             </div>
           ) : (
             savedGrids.sort((a, b) => b.updatedAt - a.updatedAt).map(grid => (
-              <div key={grid.id} className="bg-neutral-950 border border-neutral-800 p-5 flex flex-col gap-4 group transition-colors hover:border-neutral-500">
+              <div key={grid.id} className="bg-neutral-950 border border-neutral-800 p-5 flex flex-col gap-4 group transition-colors hover:border-neutral-500 rounded-sm">
+                
+                <div className="w-full aspect-square bg-black border border-neutral-800 rounded-sm overflow-hidden flex items-center justify-center p-2 relative">
+                  <div 
+                    className="w-full h-full [&>svg]:w-full [&>svg]:h-full [&>svg]:object-contain" 
+                    dangerouslySetInnerHTML={{ __html: generateSimplifiedSvg(grid.gridState, false) }} 
+                  />
+                  {grid.workspaceId && (
+                    <div className="absolute top-2 right-2 bg-black/80 backdrop-blur-sm border border-neutral-800 rounded-sm px-1.5 py-1 flex items-center gap-1 text-sky-400">
+                      <Cloud className="w-3 h-3" />
+                      <span className="text-[8px] font-bold uppercase tracking-widest hidden sm:inline">Synced</span>
+                    </div>
+                  )}
+                </div>
+
                 <div className="flex items-start justify-between gap-2">
                   {editingId === grid.id ? (
                     <div className="flex-1 flex items-center gap-2">
@@ -88,6 +111,15 @@ export default function GridManager({ onClose, onLoad }: GridManagerProps) {
 
                   {editingId !== grid.id && (
                     <div className="flex items-center gap-1 shrink-0 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
+                      {grid.workspaceId && (
+                        <button
+                          onClick={() => handleCopyLink(grid.workspaceId!)}
+                          className="p-1.5 text-neutral-500 hover:text-sky-400 hover:bg-sky-950/30 transition-colors"
+                          title="Copy Link"
+                        >
+                          {copiedId === grid.workspaceId ? <Check className="w-4 h-4 text-emerald-500" /> : <Link className="w-4 h-4" />}
+                        </button>
+                      )}
                       <button
                         onClick={() => { setEditingId(grid.id); setEditName(grid.name); }}
                         className="p-1.5 text-neutral-500 hover:text-white hover:bg-neutral-800 transition-colors"
