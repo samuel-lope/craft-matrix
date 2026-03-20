@@ -345,14 +345,20 @@ export default function App() {
       value: newAssetValue
     };
     if (activeTool === 'bg-color') {
-      setSavedColors(prev => [...prev, newAsset]);
+      const newAssets = [...savedColors, newAsset];
+      setSavedColors(newAssets);
       setCurrentColor(newAsset.value);
+      if (currentWorkspaceId) syncToCloud(currentWorkspaceId, gridState, Date.now(), { colors: newAssets });
     } else if (activeTool === 'bg-svg') {
-      setSavedBgSvgs(prev => [...prev, newAsset]);
+      const newAssets = [...savedBgSvgs, newAsset];
+      setSavedBgSvgs(newAssets);
       setCurrentBgSvg(newAsset.value);
+      if (currentWorkspaceId) syncToCloud(currentWorkspaceId, gridState, Date.now(), { bgSvgs: newAssets });
     } else if (activeTool === 'item-svg') {
-      setSavedItemSvgs(prev => [...prev, newAsset]);
+      const newAssets = [...savedItemSvgs, newAsset];
+      setSavedItemSvgs(newAssets);
       setCurrentItemSvg(newAsset.value);
+      if (currentWorkspaceId) syncToCloud(currentWorkspaceId, gridState, Date.now(), { itemSvgs: newAssets });
     }
     setIsAddingAsset(false);
     setNewAssetValue('');
@@ -422,6 +428,20 @@ export default function App() {
           if (data && data.data_json) {
             const loadedGridState = JSON.parse(data.data_json);
             setGridState(loadedGridState);
+            
+            if (data.colors_json) {
+              setSavedColors(JSON.parse(data.colors_json));
+              localStorage.setItem('savedColors', data.colors_json);
+            }
+            if (data.bg_svgs_json) {
+              setSavedBgSvgs(JSON.parse(data.bg_svgs_json));
+              localStorage.setItem('savedBgSvgs', data.bg_svgs_json);
+            }
+            if (data.item_svgs_json) {
+              setSavedItemSvgs(JSON.parse(data.item_svgs_json));
+              localStorage.setItem('savedItemSvgs', data.item_svgs_json);
+            }
+
             setCurrentWorkspaceId(workspaceId);
             const stored = localStorage.getItem('savedGrids');
             let grids: SavedGrid[] = stored ? JSON.parse(stored) : [];
@@ -719,7 +739,12 @@ export default function App() {
     });
   }, []);
 
-  const syncToCloud = (workspaceId: string, gridData: GridState, updatedAt: number) => {
+  const syncToCloud = (
+    workspaceId: string, 
+    gridData: GridState, 
+    updatedAt: number,
+    overrideAssets?: { colors?: SavedAsset[], bgSvgs?: SavedAsset[], itemSvgs?: SavedAsset[] }
+  ) => {
     setIsCloudSyncing(true);
     fetch('/api/sync', {
       method: 'POST',
@@ -727,6 +752,9 @@ export default function App() {
       body: JSON.stringify({
         id: workspaceId,
         data_json: JSON.stringify(gridData),
+        colors_json: JSON.stringify(overrideAssets?.colors || savedColors),
+        bg_svgs_json: JSON.stringify(overrideAssets?.bgSvgs || savedBgSvgs),
+        item_svgs_json: JSON.stringify(overrideAssets?.itemSvgs || savedItemSvgs),
         updated_at: updatedAt
       })
     })
@@ -860,11 +888,20 @@ export default function App() {
       <AssetManager
         onClose={() => setShowAssetManager(false)}
         savedColors={savedColors}
-        setSavedColors={setSavedColors}
+        setSavedColors={(assets) => {
+          setSavedColors(assets);
+          if (currentWorkspaceId) syncToCloud(currentWorkspaceId, gridState, Date.now(), { colors: assets });
+        }}
         savedBgSvgs={savedBgSvgs}
-        setSavedBgSvgs={setSavedBgSvgs}
+        setSavedBgSvgs={(assets) => {
+          setSavedBgSvgs(assets);
+          if (currentWorkspaceId) syncToCloud(currentWorkspaceId, gridState, Date.now(), { bgSvgs: assets });
+        }}
         savedItemSvgs={savedItemSvgs}
-        setSavedItemSvgs={setSavedItemSvgs}
+        setSavedItemSvgs={(assets) => {
+          setSavedItemSvgs(assets);
+          if (currentWorkspaceId) syncToCloud(currentWorkspaceId, gridState, Date.now(), { itemSvgs: assets });
+        }}
       />
     );
   }
