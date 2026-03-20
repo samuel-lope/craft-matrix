@@ -2,11 +2,10 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Settings, MousePointer2, PaintBucket, Image as ImageIcon, Eraser, Download, Square, Library, FolderOpen, Save, Type, Grid, Layout, Plus, X, Pipette, Cloud, Link, Loader2, User, LogOut, Lock } from 'lucide-react';
 import * as htmlToImage from 'html-to-image';
 import { CellData, GridState, Tool, CellBorder, BorderAlignment, SavedAsset, SavedGrid } from './types';
-import AssetManager from './AssetManager';
-import GridManager from './GridManager';
 import Modal from './Modal';
 import AuthModal from './AuthModal';
 import SyncModal from './SyncModal';
+import SettingsModal from './SettingsModal';
 import { generateSimplifiedSvg } from './gridUtils';
 
 const getBorderOffset = (border: CellBorder | undefined, lineThickness: number) => {
@@ -283,8 +282,8 @@ export default function App() {
   const [savedItemSvgs, setSavedItemSvgs] = useState<SavedAsset[]>([
     { id: 'i1', name: 'Red Circle', value: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="120" height="120"><circle cx="50" cy="50" r="40" fill="red" opacity="0.8" /></svg>' }
   ]);
-  const [showAssetManager, setShowAssetManager] = useState(false);
-  const [showGridManager, setShowGridManager] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [settingsTab, setSettingsTab] = useState<'grids' | 'assets'>('grids');
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [isSavePromptModalOpen, setIsSavePromptModalOpen] = useState(false);
   const [saveName, setSaveName] = useState('');
@@ -908,7 +907,7 @@ export default function App() {
     setCurrentGridId(loadedGrid.id);
     setCurrentGridName(loadedGrid.name);
     setCurrentWorkspaceId(loadedGrid.workspaceId || null);
-    setShowGridManager(false);
+    setShowSettingsModal(false);
   };
 
   const handleToolSelect = (tool: Tool) => {
@@ -916,37 +915,6 @@ export default function App() {
     setIsEraserMode(false);
   };
 
-  if (showAssetManager) {
-    return (
-      <AssetManager
-        onClose={() => setShowAssetManager(false)}
-        savedColors={savedColors}
-        setSavedColors={(assets) => {
-          setSavedColors(assets);
-          if (currentWorkspaceId) syncToCloud(currentWorkspaceId, gridState, Date.now(), { colors: assets });
-        }}
-        savedBgSvgs={savedBgSvgs}
-        setSavedBgSvgs={(assets) => {
-          setSavedBgSvgs(assets);
-          if (currentWorkspaceId) syncToCloud(currentWorkspaceId, gridState, Date.now(), { bgSvgs: assets });
-        }}
-        savedItemSvgs={savedItemSvgs}
-        setSavedItemSvgs={(assets) => {
-          setSavedItemSvgs(assets);
-          if (currentWorkspaceId) syncToCloud(currentWorkspaceId, gridState, Date.now(), { itemSvgs: assets });
-        }}
-      />
-    );
-  }
-
-  if (showGridManager) {
-    return (
-      <GridManager
-        onClose={() => setShowGridManager(false)}
-        onLoad={handleLoadGrid}
-      />
-    );
-  }
 
   return (
     <div className="flex h-screen w-full bg-neutral-950 text-neutral-200 font-sans overflow-hidden">
@@ -1028,7 +996,7 @@ export default function App() {
                     <button onClick={() => { setIsAddingAsset(!isAddingAsset); setNewAssetValue('#ffffff') }} className="text-neutral-400 hover:text-white transition-colors" title="Add Color">
                       {isAddingAsset ? <X size={14} /> : <Plus size={14} />}
                     </button>
-                    <button onClick={() => setShowAssetManager(true)} className="text-[10px] text-neutral-400 hover:text-neutral-300 font-medium uppercase tracking-wider transition-colors">Manage</button>
+                    <button onClick={() => { setSettingsTab('assets'); setShowSettingsModal(true); }} className="text-[10px] text-neutral-400 hover:text-neutral-300 font-medium uppercase tracking-wider transition-colors">Manage</button>
                   </div>
                 </div>
                 
@@ -1083,7 +1051,7 @@ export default function App() {
                     <button onClick={() => { setIsAddingAsset(!isAddingAsset); setNewAssetValue('') }} className="text-neutral-400 hover:text-white transition-colors" title="Add SVG">
                       {isAddingAsset ? <X size={14} /> : <Plus size={14} />}
                     </button>
-                    <button onClick={() => setShowAssetManager(true)} className="text-[10px] text-neutral-400 hover:text-neutral-300 font-medium uppercase tracking-wider transition-colors">Manage</button>
+                    <button onClick={() => { setSettingsTab('assets'); setShowSettingsModal(true); }} className="text-[10px] text-neutral-400 hover:text-neutral-300 font-medium uppercase tracking-wider transition-colors">Manage</button>
                   </div>
                 </div>
 
@@ -1123,7 +1091,7 @@ export default function App() {
                     <button onClick={() => { setIsAddingAsset(!isAddingAsset); setNewAssetValue('') }} className="text-neutral-400 hover:text-white transition-colors" title="Add SVG">
                       {isAddingAsset ? <X size={14} /> : <Plus size={14} />}
                     </button>
-                    <button onClick={() => setShowAssetManager(true)} className="text-[10px] text-neutral-400 hover:text-neutral-300 font-medium uppercase tracking-wider transition-colors">Manage</button>
+                    <button onClick={() => { setSettingsTab('assets'); setShowSettingsModal(true); }} className="text-[10px] text-neutral-400 hover:text-neutral-300 font-medium uppercase tracking-wider transition-colors">Manage</button>
                   </div>
                 </div>
 
@@ -1500,18 +1468,12 @@ export default function App() {
             </button>
             <div className="w-px h-6 bg-slate-700/50 mx-1"></div>
             <button
-              onClick={() => setShowGridManager(true)}
-              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-300 hover:text-indigo-300 hover:bg-indigo-500/10 rounded-lg transition-all border border-transparent hover:border-indigo-500/30"
+              onClick={() => { setSettingsTab('grids'); setShowSettingsModal(true); }}
+              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-300 hover:text-white hover:bg-neutral-800 rounded-lg transition-all border border-transparent"
+              title="Manage Saved Grids & Assets"
             >
-              <FolderOpen className="w-4 h-4" />
-              Manage Saved Grids
-            </button>
-            <button
-              onClick={() => setShowAssetManager(true)}
-              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-300 hover:text-indigo-300 hover:bg-indigo-500/10 rounded-lg transition-all border border-transparent hover:border-indigo-500/30"
-            >
-              <Library className="w-4 h-4" />
-              Manage Assets
+              <Settings className="w-4 h-4" />
+              <span className="hidden xl:inline">Settings</span>
             </button>
             <div className="w-px h-6 bg-slate-700/50 mx-2"></div>
             <button
@@ -2097,6 +2059,28 @@ export default function App() {
         workspaceId={currentWorkspaceId}
         ownerName={currentUser?.login || null}
         syncDate={lastSyncDate}
+      />
+
+      <SettingsModal
+        isOpen={showSettingsModal}
+        onClose={() => setShowSettingsModal(false)}
+        initialTab={settingsTab}
+        savedColors={savedColors}
+        setSavedColors={(assets) => {
+          setSavedColors(assets);
+          if (currentWorkspaceId) syncToCloud(currentWorkspaceId, gridState, Date.now(), { colors: assets });
+        }}
+        savedBgSvgs={savedBgSvgs}
+        setSavedBgSvgs={(assets) => {
+          setSavedBgSvgs(assets);
+          if (currentWorkspaceId) syncToCloud(currentWorkspaceId, gridState, Date.now(), { bgSvgs: assets });
+        }}
+        savedItemSvgs={savedItemSvgs}
+        setSavedItemSvgs={(assets) => {
+          setSavedItemSvgs(assets);
+          if (currentWorkspaceId) syncToCloud(currentWorkspaceId, gridState, Date.now(), { itemSvgs: assets });
+        }}
+        onLoadGrid={handleLoadGrid}
       />
     </div>
   );
