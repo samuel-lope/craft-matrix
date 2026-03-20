@@ -90,7 +90,7 @@ As ferramentas operam sob a lógica do "clique na célula". A ferramenta selecio
 
 ### 3. Gerenciamento (Managers)
 - **Manage Assets**: Fica num modal dedicado (Asset Manager) para exclusão em massa, verificação e edição de strings de código hexagonal (cores), código limpo SVG para fundos, e código limpo SVG para itens. *Inclusões atômicas são preferencialmente geradas dinamicamente dentro dos atalhos inline descritos na seção Tool Settings.*
-- **Manage Saved Grids**: Fica num modal dedicado (Grid Manager) garantindo o salvamento progressivo e versionado da grade no `LocalStorage`. Suporta as funções Overwrite, Save As New, Restore (Load), Rename e Delete.
+- **Manage Saved Grids**: Fica num modal dedicado (Grid Manager) garantindo o salvamento progressivo e versionado da grade no `LocalStorage`. Suporta as funções Overwrite, Save As New, Restore (Load), Rename e Delete. A partir da adoção do Storage Remoto, todos os saves com `workspaceId` associados engatilham um fetch `POST` silencioso de background sync para o banco Cloudflare D1 local/remoto, protegido com regra estrita On Conflict por timestamps (`updated_at`).
 
 ### 4. Exportação do Trabalho
 O cabeçalho possui botões dedicados para exportar toda a montagem visual da grade usando a lib `html-to-image`, que passa por uma conversão em Blob para burlar restrições de segurança do navegador que impedem downloads automáticos de Base64 em arquivos extensos. Ao clicar nos botões de exportação, um **modal de opções** é exibido antes do download:
@@ -109,6 +109,8 @@ O cabeçalho possui botões dedicados para exportar toda a montagem visual da gr
 - `src/types.ts`: Define de forma estrita todo modelo de dados tipado, notavelmente o `GridState`, `CellData`, `LabelData`, `CellBorder` e a união `Tool`.
 - `src/AssetManager.tsx` e `src/GridManager.tsx`: Administram os overlays de gerenciamento gravando localmente na memória (LocalStorage), permitindo a persistência de cores, SVGs e grids completos.
 - `src/Modal.tsx`: O layout visual contentor de janelas pop-up usado nos submenus do Manager e de Salvar/Exportar.
+- `functions/api/sync.ts`: Endpoint local via Cloudflare Pages Functions que administra as chamadas GET e POST (Workers HTTP APIs), processando as checagens com SQLite e interceptando requisições sem causar reload de viewport.
+- `wrangler.jsonc` e `schema.sql`: Definição declarativa da nuvem estipulando os agrupamentos (`database_id`), regras locais e estrutura do DB D1.
 
 ## Notas de Estilo e Diretrizes
 Este projeto usa a estética **Technical Minimalism** com **Dark Mode** puro. Todo diálogo textual e interações com a inteligência artificial (inclusive este próprio documento) devem ser pautados rigorosamente na norma **Português do Brasil**. Todas as mudanças complexas requerem elaboração por painéis Modais ou desmembramentos otimizados.

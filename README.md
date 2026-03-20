@@ -2,9 +2,30 @@
 
 Craft Matrix é uma aplicação web para desenhar e configurar grids personalizados, útil para criação de matrizes de jogos, mapas (battlemaps), esquemas de design ou painéis de referência visual.
 
-A aplicação trabalha diretamente no navegador, construída com **React**, **TypeScript**, **Tailwind CSS**, **Lucide React** (para ícones) e **html-to-image** (para exportações).
+A aplicação trabalha diretamente no navegador, construída com **React**, **TypeScript**, **Tailwind CSS**, **Lucide React** (para ícones), **html-to-image** (para exportações) e **Cloudflare D1** (para persistência em nuvem).
 
-## 🚀 Funcionalidades
+## 🚀 Quick Start
+
+**Pré-requisitos:** Node.js (Recomendado v18 ou superior) e Wrangler instalado.
+
+1. Instale todas as dependências do projeto contidas no `package.json`:
+   ```bash
+   npm install
+   ```
+
+2. Realize o build da aplicação e inicialize o ambiente de desenvolvimento local vinculado ao Cloudflare D1:
+   ```bash
+   npm run build
+   npx wrangler pages dev dist
+   ```
+
+3. Acesse a aplicação no seu navegador usando a porta gerada (comumente `http://127.0.0.1:8788`).
+
+## ✨ Features
+
+### ☁️ Persistência em Nuvem (Cloud Sync & Share)
+- **Workspaces Anônimos:** Você pode criar seu próprio quadro UUID. Compartilhe o link (`/?workspace=UUID`) para visualização e colaboração imediata em qualquer dispositivo.
+- **Sincronização em Background (D1):** Alterações locais espelham na base de dados `SQLite` global da Cloudflare de maneira invisível. O sistema utiliza validações através do `updated_at` nativo para garantir segurança contra a possível sobrescrita de dados velhos em caso de aberturas de janelas offline duplicadas.
 
 ### ⚙️ Configurações de Grid
 - **Dimensões**: Defina o número de linhas (Rows) e colunas (Cols).
@@ -14,109 +35,29 @@ A aplicação trabalha diretamente no navegador, construída com **React**, **Ty
 - **Fundo Global**: Definição de cor e opacidade do fundo das células, mantendo linhas/bordas perfeitamente visíveis em qualquer nível de transparência.
 - **Workspace Background**: Personalização da área de fundo do workspace com cor sólida e textura (URL ou código SVG).
 
-#### 📄 Referência de Parâmetros em JSON (Grid Elements)
-Abaixo está o mapeamento descritivo em formato JSON que detalha os atributos e elementos configuráveis detectados na aplicação:
-
-```json
-{
-  "gridParameters": {
-    "dimensions": {
-      "rows": "Número de linhas horizontais",
-      "cols": "Número de colunas verticais",
-      "cellSize": "Tamanho em pixels de cada célula individual (quadrada)"
-    },
-    "gridLines": {
-      "lineThickness": "Espessura (Line Width) das linhas divisórias internas",
-      "lineColor": "Cor (Line Color) das linhas divisórias internas"
-    },
-    "outerBorder": {
-      "borderThickness": "Espessura da linha de contorno da moldura externa do grid (sem preenchimento central)",
-      "borderColor": "Cor da linha de contorno da moldura externa do grid"
-    },
-    "externalMargin": {
-      "externalMargin": "Espessura em pixels da margem externa (atua como uma linha de limite externa vazada)",
-      "externalMarginColor": "Cor da linha que demarca a área da margem externa",
-      "externalMarginOpacity": "Nível de opacidade da linha da margem externa"
-    },
-    "innerBackground": {
-      "innerBgColor": "Cor de fundo global aplicada dentro do grid",
-      "innerBgOpacity": "Opacidade global do fundo interno do grid"
-    },
-    "workspace": {
-      "workspaceBgColor": "Cor de fundo do workspace (área externa ao grid)",
-      "workspaceBgImageUrl": "URL ou código SVG da textura de fundo do workspace"
-    }
-  },
-  "cellData": {
-    "bgType": "Tipo de fundo da célula ('color' para cor sólida, 'svg' para imagem vetorial)",
-    "bgValue": "Valor hexadecimal da cor ou string de código SVG do fundo da célula",
-    "itemValue": "Código SVG do item flutuante posicionado sobre o fundo da célula",
-    "label": {
-      "text": "Conteúdo de texto a ser renderizado na célula",
-      "font": "Família de fonte tipográfica",
-      "size": "Tamanho da fonte em pixels",
-      "color": "Cor do texto em valor Hex",
-      "align": "Alinhamento do texto ('start', 'center' ou 'end')",
-      "frameBgColor": "Cor de fundo do quadro do texto",
-      "frameBgOpacity": "Opacidade do fundo do quadro do texto",
-      "frameBorderColor": "Cor da borda do quadro do texto",
-      "frameBorderWidth": "Espessura da borda do quadro do texto",
-      "frameRadius": "Raio da quina do quadro do texto",
-      "framePadding": "Espaçamento interno do quadro do texto"
-    },
-    "borders": {
-      "borderTop": "Configuração da borda superior (largura, cor, alinhamento)",
-      "borderRight": "Configuração da borda direita (largura, cor, alinhamento)",
-      "borderBottom": "Configuração da borda inferior (largura, cor, alinhamento)",
-      "borderLeft": "Configuração da borda esquerda (largura, cor, alinhamento)"
-    }
-  }
-}
-```
-
 ### 🛠️ Ferramentas de Interação (Interação na Célula)
 As ferramentas operam sob a lógica do "clique na célula". A ferramenta selecionada dita o que ocorre ao clicar numa célula:
 - **Background Tools**: Permitem Pintar com cor sólida (`bg-color`) ou colocar um SVG em código (`bg-svg`) de redimensionamento em 100% sob a célula.
 - **Item Tools**: Permitem Inserir um código SVG flutuando acima do background (`item-svg`).
-- **Label Tools**: Permite inserir texto (`label`) com tipografia editável (fonte, tamanho, cor e alinhamento: start, center, end). Inclui suporte a **moldura (frame)** configurável com cor de fundo, opacidade, borda, raio e preenchimento.
-- **Cell Border Tools**: Permitem aplicar (`cell-border`) as bordas de uma célula específica. Há uma sub-janela de seleção dos lados (Top, Right, Bottom, Left), escolha de tamanho, cor e comportamento de alinhamento (`inner`, `center`, `outer`).
-- **Unified Eraser Tool**: Botão universal de "Erase Mode" configurável por contexto. Quando ativo, atua apagando a camada (Layer) referente à ferramenta recém ativada (Background, Item, Label, Borders), simplificando a interface.
-- **General Tools**: Ferramenta `Pointer` passiva (não faz nada na célula), ferramenta para apagar todo o conteúdo de uma célula de vez (`Eraser Area`), além do botão extra de limpeza completa do grid.
+- **Label Tools**: Permite inserir texto (`label`) com tipografia editável (fonte, tamanho, cor e alinhamento). Inclui suporte a **moldura (frame)** configurável (cor, borda, border-radius e padding).
+- **Cell Border Tools**: Permitem aplicar (`cell-border`) as bordas de uma célula específica. (Top, Right, Bottom, Left, com configuração de largura, cor e alinhamento).
+- **Unified Eraser Tool**: Botão de borracha com sensibilidade à camada da sua atual ferramenta ativada (Background, Item, Label, Borders).
+- **General Tools**: Ferramenta `Pointer` passiva, apagador geral de área (`Eraser Area`) e botão auxiliar para limpeza integral do grid.
+- **Inline Asset Tools**: Ferramentas incluem atalhos com botão `+` para colar ou amostrar cores com Eyedropper sem precisar sair do painel atual interagindo direto com o Asset Manager.
 
-*Nota: As configurações de cada ferramenta (Tool Settings) agora ficam organizadas de modo fluido em um painel secundário à esquerda (junto às ferramentas), incluindo atalhos com botão `+` para criar novas cores via **Color Picker/Conta-Gotas nativo** ou colar novos SVGs de modo inline, super rápido.*
-
-### 💾 Gerenciamento (Managers)
-- **Asset Manager (Manage Assets)**: Janela dedicada para salvar strings de código hexagonal (cores) e código SVG limpo para uso posterior (fundos ou itens). Suporta adição, edição e exclusão.
-- **Grid Manager (Manage Saved Grids)**: Janela para salvamento progressivo e versionado da grade no `LocalStorage`. Permite Sobrescrever (Overwrite), Salvar como Novo (Save As New), Renomear e Excluir.
+### 💾 Gerenciamento Local (Managers)
+- **Asset Manager (Manage Assets)**: Janela dedicada para salvar códigos Hex e SVG em LocalStorage.
+- **Grid Manager (Manage Saved Grids)**: Local de salvamentos progressivos (Overwrite, Save As New, Restore, Edit). Integrado ao roteador Cloud Sync que emite um Background push automático atrelado ao banco referencial sempre que um save sobrepõe os dados de um workspace existente.
 
 ### 📤 Exportação
-Ao clicar nos botões de exportação no cabeçalho, um **modal de opções** é exibido antes do download:
+- **PNG**: Small (0.5×), Original Size (1×), Print (300 DPI).
+- **SVG**: Exportação livre da estrutura matricial de SVG limpo ativada com o novo "Simplified SVG", o qual neutraliza imprecisão de anti-aliasing via overlaps geométricos nativos injetados entre as células com `shape-rendering="crispEdges"`.
+- **No Grid Lines** (Checkbox): Criação de imagem sem a renderização da linha matricial visível.
 
-- **PNG** (Modal "Export PNG"): Oferece três opções de tamanho/resolução:
-  - **Small (0.5×)**: Escala reduzida a 50% da dimensão original.
-  - **Original Size (1×)**: Mantém resolução 1:1 pixel-perfect.
-  - **Print (300 DPI)**: Renderiza em alta resolução para impressão.
-- **SVG** (Modal "Export SVG"): Permite definir dimensões personalizadas em pixels (Largura e Altura) para o arquivo SVG exportado. Os campos vêm pré-preenchidos com as dimensões reais calculadas do grid, preservando a proporção original via `viewBox`. Há uma opção engatada dedicada ("Simplified SVG"):
-  - **Simplified SVG (Fast, Backgrounds only)**: Um checkbox que contorna o processador primário (da DOM) e desenha nativamente um arquivo XML limpo estruturado com `shape-rendering="crispEdges"` contendo exatamente as larguras de linhas aplicadas. Ele injeta `overlap` sub-pixel para neutralizar qualquer defeito de margem branca/anti-aliasing, sendo perfeito para matrizes sólidas de fundos ou pixel-art puros sem perdas em Base64.
-- **No Grid Lines** (Checkbox): Disponível em ambos os modais, permite exportar a imagem sem as linhas divisórias internas (escondendo a grid invisível num SVG simplificado, ou apagando-nas em um DOM capture).
-
-> *Nota: O processo converte a tela internamente via Blob para evadir restrições de download seguras do navegador baseadas em Base64.*
-
-## 💻 Como Rodar o Projeto
-
-**Pré-requisitos:** Node.js (Recomendado v18 ou superior)
-
-1. Instale todas as dependências do projeto contidas no `package.json`:
-   ```bash
-   npm install
-   ```
-
-2. Faça a execução da aplicação em modo de desenvolvimento voltado em Live Server local:
-   ```bash
-   npm run dev
-   ```
-
-3. Acesse a aplicação no seu navegador padrão usando a porta indicada pelo console (ex: `http://localhost:3000`). Para buildar, aplique `npm run build`.
+## 📡 API Reference
+Neste modelo simplificado orientado ao ambiente Cloudflare (Pages + D1):
+- `GET /api/sync?id=<workspaceId>`: Realiza fetch indexado por UUID de um GridState JSON previamente alocado no BD relacional distribuido Cloudflare.
+- `POST /api/sync`: Realiza o "upsert" em tempo de background, atualizando o campo `data_json`. Inclui tratamento condicional `WHERE` com prioridade para chaves mais novas em milissegundos.
 
 ## 🎨 Estilo e Design
-Este projeto adota a estética **Technical Minimalism** com **Dark Mode** puro, utilizando uma paleta construída sobre preto (#000000) e a escala de cinza `neutral` do Tailwind CSS, com acentos em branco para alto contraste e elementos ativos. Usa ícones discretos do **Lucide React** e uma tipografia limpa.
+Adota estética **Technical Minimalism** pautada em **Dark Mode** puro, paleta preta fundamental (#000000) e cinzas da classe `neutral` do Tailwind CSS, acentos brancos de contraste em botões primários. Os ícones padronizados transitam via vetor leve do pacote `lucide-react`.
