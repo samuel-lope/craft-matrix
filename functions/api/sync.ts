@@ -44,6 +44,10 @@ export async function onRequestPost(context: any) {
   
   try {
     const userId = await validateSession(request, env);
+    if (!userId) {
+      return new Response(JSON.stringify({ error: 'Unauthorized: You must be logged in to sync to cloud' }), { status: 401 });
+    }
+    
     const body = await request.json();
     const { id, data_json, updated_at, colors_json, bg_svgs_json, item_svgs_json } = body;
 
