@@ -1,3 +1,5 @@
+import { validateSession } from './authUtils';
+
 export async function onRequestGet(context: any) {
   const { request, env } = context;
   const url = new URL(request.url);
@@ -8,8 +10,10 @@ export async function onRequestGet(context: any) {
   }
 
   try {
+    const userId = await validateSession(request, env);
+
     const { results } = await env.DB.prepare(
-      'SELECT data_json, updated_at FROM workspaces WHERE id = ?'
+      'SELECT data_json, updated_at, user_id FROM workspaces WHERE id = ?'
     ).bind(workspaceId).all();
 
     if (results.length === 0) {
@@ -22,7 +26,9 @@ export async function onRequestGet(context: any) {
 
     const responseData = {
       ...results[0],
-      ...(assetResults.length > 0 ? assetResults[0] : {})
+      ...(assetResults.length > 0 ? assetResults[0] : {}),
+      isOwner: userId && results[0].user_id === userId ? true : false,
+      ownerId: results[0].user_id
     };
 
     return new Response(JSON.stringify(responseData), {
@@ -37,6 +43,7 @@ export async function onRequestPost(context: any) {
   const { request, env } = context;
   
   try {
+    const userId = await validateSession(request, env);
     const body = await request.json();
     const { id, data_json, updated_at, colors_json, bg_svgs_json, item_svgs_json } = body;
 
@@ -44,27 +51,38 @@ export async function onRequestPost(context: any) {
       return new Response(JSON.stringify({ error: 'Missing required fields' }), { status: 400 });
     }
 
+    const { results: checkResults } = await env.DB.prepare('SELECT user_id FROM workspaces WHERE id = ?').bind(id).all();
+    if (checkResults.length > 0) {
+      if (checkResults[0].user_id && checkResults[0].user_id !== userId) {
+         return new Response(JSON.stringify({ error: 'Forbidden: You do not own this workspace' }), { status: 403 });
+      }
+    }
+
+    const finalUserId = userId || null;
+
     const result = await env.DB.prepare(`
-      INSERT INTO workspaces (id, data_json, updated_at) 
-      VALUES (?, ?, ?) 
+      INSERT INTO workspaces (id, user_id, data_json, updated_at) 
+      VALUES (?, ?, ?, ?) 
       ON CONFLICT (id) DO UPDATE SET 
+        user_id = excluded.user_id,
         data_json = excluded.data_json, 
         updated_at = excluded.updated_at 
       WHERE workspaces.updated_at < excluded.updated_at
-    `).bind(id, data_json, updated_at).run();
+    `).bind(id, finalUserId, data_json, updated_at).run();
 
     let assetsChanges = 0;
     if (colors_json !== undefined || bg_svgs_json !== undefined || item_svgs_json !== undefined) {
       const assetResult = await env.DB.prepare(`
-        INSERT INTO assets (workspace_id, colors_json, bg_svgs_json, item_svgs_json, updated_at) 
-        VALUES (?, ?, ?, ?, ?) 
+        INSERT INTO assets (workspace_id, user_id, colors_json, bg_svgs_json, item_svgs_json, updated_at) 
+        VALUES (?, ?, ?, ?, ?, ?) 
         ON CONFLICT (workspace_id) DO UPDATE SET 
+          user_id = excluded.user_id,
           colors_json = excluded.colors_json, 
           bg_svgs_json = excluded.bg_svgs_json, 
           item_svgs_json = excluded.item_svgs_json,
           updated_at = excluded.updated_at 
         WHERE assets.updated_at < excluded.updated_at
-      `).bind(id, colors_json || null, bg_svgs_json || null, item_svgs_json || null, updated_at).run();
+      `).bind(id, finalUserId, colors_json || null, bg_svgs_json || null, item_svgs_json || null, updated_at).run();
       assetsChanges = assetResult.meta?.changes || 0;
     }
 

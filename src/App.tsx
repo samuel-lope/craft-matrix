@@ -1,10 +1,11 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { Settings, MousePointer2, PaintBucket, Image as ImageIcon, Eraser, Download, Square, Library, FolderOpen, Save, Type, Grid, Layout, Plus, X, Pipette, Cloud, Link, Loader2 } from 'lucide-react';
+import { Settings, MousePointer2, PaintBucket, Image as ImageIcon, Eraser, Download, Square, Library, FolderOpen, Save, Type, Grid, Layout, Plus, X, Pipette, Cloud, Link, Loader2, User, LogOut } from 'lucide-react';
 import * as htmlToImage from 'html-to-image';
 import { CellData, GridState, Tool, CellBorder, BorderAlignment, SavedAsset, SavedGrid } from './types';
 import AssetManager from './AssetManager';
 import GridManager from './GridManager';
 import Modal from './Modal';
+import AuthModal from './AuthModal';
 import { generateSimplifiedSvg } from './gridUtils';
 
 const getBorderOffset = (border: CellBorder | undefined, lineThickness: number) => {
@@ -296,6 +297,10 @@ export default function App() {
   const [currentWorkspaceId, setCurrentWorkspaceId] = useState<string | null>(null);
   const [isCloudSyncing, setIsCloudSyncing] = useState<boolean>(false);
 
+  // Auth State
+  const [currentUser, setCurrentUser] = useState<{id: string, login: string} | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+
   // Export modal states
   const [isPngExportModalOpen, setIsPngExportModalOpen] = useState(false);
   const [isSvgExportModalOpen, setIsSvgExportModalOpen] = useState(false);
@@ -417,6 +422,14 @@ export default function App() {
 
   // Load assets from LocalStorage on mount
   useEffect(() => {
+    // Session Check
+    fetch('/api/auth/me')
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data?.user) setCurrentUser(data.user);
+      })
+      .catch(console.error);
+
     // Cloudflare D1 Workspace Check
     const params = new URLSearchParams(window.location.search);
     const workspaceId = params.get('workspace');
@@ -477,6 +490,15 @@ export default function App() {
     if (storedBgSvgs) setSavedBgSvgs(JSON.parse(storedBgSvgs));
     if (storedItemSvgs) setSavedItemSvgs(JSON.parse(storedItemSvgs));
   }, []);
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      setCurrentUser(null);
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   // Save assets to LocalStorage on change
   useEffect(() => {
@@ -1421,6 +1443,33 @@ export default function App() {
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
               <span className="text-xs font-mono text-neutral-200 tracking-wider font-bold">WORKSPACE ACTIVE</span>
             </div>
+            
+            {/* Auth Section */}
+            <div className="flex items-center gap-3 ml-6 border-l border-neutral-800 pl-6">
+              {currentUser ? (
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-sky-400 uppercase tracking-widest bg-sky-500/10 px-2.5 py-1 rounded">
+                    <User className="w-3.5 h-3.5" />
+                    {currentUser.login}
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="p-1 rounded text-neutral-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                    title="Logout"
+                  >
+                    <LogOut className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowAuthModal(true)}
+                  className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-neutral-300 hover:text-white transition-colors"
+                >
+                  <User className="w-4 h-4" />
+                  Sign In
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="flex items-center gap-3">
@@ -2015,6 +2064,15 @@ export default function App() {
           
         </div>
       </aside>
+      
+      <AuthModal 
+        isOpen={showAuthModal} 
+        onClose={() => setShowAuthModal(false)}
+        onLoginSuccess={(user) => {
+          setCurrentUser(user);
+          setShowAuthModal(false);
+        }}
+      />
     </div>
   );
 }
