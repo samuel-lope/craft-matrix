@@ -1,11 +1,12 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { Settings, MousePointer2, PaintBucket, Image as ImageIcon, Eraser, Download, Square, Library, FolderOpen, Save, Type, Grid, Layout, Plus, X, Pipette, Cloud, Link, Loader2, User, LogOut } from 'lucide-react';
+import { Settings, MousePointer2, PaintBucket, Image as ImageIcon, Eraser, Download, Square, Library, FolderOpen, Save, Type, Grid, Layout, Plus, X, Pipette, Cloud, Link, Loader2, User, LogOut, Lock } from 'lucide-react';
 import * as htmlToImage from 'html-to-image';
 import { CellData, GridState, Tool, CellBorder, BorderAlignment, SavedAsset, SavedGrid } from './types';
 import AssetManager from './AssetManager';
 import GridManager from './GridManager';
 import Modal from './Modal';
 import AuthModal from './AuthModal';
+import SyncModal from './SyncModal';
 import { generateSimplifiedSvg } from './gridUtils';
 
 const getBorderOffset = (border: CellBorder | undefined, lineThickness: number) => {
@@ -300,6 +301,10 @@ export default function App() {
   // Auth State
   const [currentUser, setCurrentUser] = useState<{id: string, login: string} | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  
+  // Sync Status State
+  const [showSyncModal, setShowSyncModal] = useState(false);
+  const [lastSyncDate, setLastSyncDate] = useState<number | null>(null);
 
   // Export modal states
   const [isPngExportModalOpen, setIsPngExportModalOpen] = useState(false);
@@ -767,7 +772,10 @@ export default function App() {
     updatedAt: number,
     overrideAssets?: { colors?: SavedAsset[], bgSvgs?: SavedAsset[], itemSvgs?: SavedAsset[] }
   ) => {
+    if (!currentUser) return;
+    
     setIsCloudSyncing(true);
+    setLastSyncDate(updatedAt);
     fetch('/api/sync', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -785,9 +793,13 @@ export default function App() {
   };
 
   const handleCloudShare = () => {
+    if (!currentUser) {
+      setShowAuthModal(true);
+      return;
+    }
+
     if (currentWorkspaceId) {
-      navigator.clipboard.writeText(`${window.location.origin}/?workspace=${currentWorkspaceId}`);
-      alert('Link copiado para a área de transferência!');
+      setShowSyncModal(true);
       return;
     }
     
@@ -828,8 +840,7 @@ export default function App() {
     localStorage.setItem('savedGrids', JSON.stringify(grids));
     
     syncToCloud(newWorkspaceId, gridState, now);
-    navigator.clipboard.writeText(`${window.location.origin}/?workspace=${newWorkspaceId}`);
-    alert('Workspace sync ativado! Link copiado para a área de transferência.');
+    setShowSyncModal(true);
   };
 
   const handleSaveGrid = () => {
@@ -1476,10 +1487,16 @@ export default function App() {
             <button
               onClick={handleCloudShare}
               className={`flex items-center gap-2 px-3 py-2 text-sm font-bold uppercase tracking-widest rounded-lg transition-all border ${currentWorkspaceId ? 'bg-sky-500/10 text-sky-400 border-sky-500/30 hover:bg-sky-500/20' : 'text-slate-300 hover:text-white border-transparent hover:bg-neutral-800'}`}
-              title={currentWorkspaceId ? 'Copy Share Link' : 'Sync to Cloud'}
+              title={!currentUser ? 'Login Required for Cloud Sync' : currentWorkspaceId ? 'Share Sync Link' : 'Sync to Cloud'}
             >
-              {isCloudSyncing ? <Loader2 className="w-4 h-4 animate-spin text-sky-400" /> : <Cloud className={`w-4 h-4 ${currentWorkspaceId ? 'text-sky-400' : ''}`} />}
-              <span>{currentWorkspaceId ? 'Cloud Sync On' : 'Cloud Sync'}</span>
+              {isCloudSyncing ? (
+                <Loader2 className="w-4 h-4 animate-spin text-sky-400" />
+              ) : !currentUser ? (
+                <Lock className="w-4 h-4 text-neutral-500" />
+              ) : (
+                <Cloud className={`w-4 h-4 ${currentWorkspaceId ? 'text-sky-400' : ''}`} />
+              )}
+              <span className={!currentUser ? 'text-neutral-500' : ''}>{currentWorkspaceId ? 'Cloud Sync On' : 'Cloud Sync'}</span>
             </button>
             <div className="w-px h-6 bg-slate-700/50 mx-1"></div>
             <button
@@ -2072,6 +2089,14 @@ export default function App() {
           setCurrentUser(user);
           setShowAuthModal(false);
         }}
+      />
+
+      <SyncModal
+        isOpen={showSyncModal}
+        onClose={() => setShowSyncModal(false)}
+        workspaceId={currentWorkspaceId}
+        ownerName={currentUser?.login || null}
+        syncDate={lastSyncDate}
       />
     </div>
   );
